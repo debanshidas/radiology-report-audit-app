@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { BarChart3, CheckCircle2, XCircle, AlertTriangle, Lightbulb, FileCheck2, ChevronDown, ChevronUp, FileText, Eye, AlertCircle, ArrowLeftRight, History, Download } from 'lucide-react';
+import { BarChart3, CheckCircle2, XCircle, AlertTriangle, Lightbulb, FileCheck2, ChevronDown, ChevronUp, FileText, Eye, AlertCircle, ArrowLeftRight, History, Download, HelpCircle, Info, ShieldAlert } from 'lucide-react';
 import AICautionNotice from '../components/AICautionNotice';
-import InteractiveReportHighlighter from '../components/InteractiveReportHighlighter';
 import ReportDiffView from '../components/ReportDiffView';
 import VersionHistoryDrawer from '../components/VersionHistoryDrawer';
 import PdfPreviewModal from '../components/PdfPreviewModal';
@@ -16,8 +15,9 @@ function getScoreGrade(score) {
 }
 
 export default function QualityDashboardPage({ auditResult, reportText, setReportText, setActivePage }) {
-  const [activeTab, setActiveTab] = useState('overview'); // overview, highlighter, diff, versions
+  const [activeTab, setActiveTab] = useState('overview'); // overview, diff, versions
   const [expandedDim, setExpandedDim] = useState(null);
+  const [showScoringGuide, setShowScoringGuide] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   // Versions state simulation
@@ -67,6 +67,9 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => setShowScoringGuide(!showScoringGuide)} className="btn-secondary">
+            <HelpCircle size={13} /> {showScoringGuide ? 'Hide Scoring Rules' : 'How Marks Are Assigned'}
+          </button>
           <button onClick={() => setIsPdfModalOpen(true)} className="btn-secondary">
             <Eye size={13} /> Preview PDF Certificate
           </button>
@@ -78,11 +81,10 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
 
       <AICautionNotice />
 
-      {/* Sub-View Navigation Tabs */}
+      {/* Sub-View Navigation Tabs (Grammarly tab removed as requested) */}
       <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
         {[
           { id: 'overview', label: '11-Dimension Overview', icon: BarChart3 },
-          { id: 'highlighter', label: 'Grammarly In-Text Inspector', icon: Eye },
           { id: 'diff', label: 'Side-by-Side Diff View', icon: ArrowLeftRight },
           { id: 'versions', label: 'Version History', icon: History },
         ].map((tab) => {
@@ -94,7 +96,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
               onClick={() => setActiveTab(tab.id)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '6px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: isActive ? 700 : 500,
+                padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: isActive ? 700 : 500,
                 background: isActive ? '#0284C7' : 'transparent',
                 color: isActive ? '#FFF' : 'var(--text-secondary)',
                 border: 'none', cursor: 'pointer'
@@ -109,6 +111,51 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
       {/* TAB 1: OVERVIEW & EXPLICIT DEDUCTIONS */}
       {activeTab === 'overview' && (
         <>
+          {/* Explanation Panel: How Marks Are Assigned & Why Marks Are Deducted */}
+          {showScoringGuide && (
+            <div className="enterprise-card" style={{ padding: '20px', background: '#F8FAFC', borderLeft: '4px solid #0284C7' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <Info size={18} color="#0284C7" />
+                <h3 style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  ACR Scoring Methodology & Mathematical Deduction Rules
+                </h3>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '12px', lineHeight: 1.6 }}>
+                {/* Column 1: How Marks Are Assigned */}
+                <div style={{ background: '#FFF', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontWeight: 800, color: '#0284C7', marginBottom: '8px', textTransform: 'uppercase', fontSize: '11px' }}>
+                    📊 Criteria Weighting (100 Marks Total):
+                  </div>
+                  <ul style={{ paddingLeft: '16px', margin: 0, color: '#334155' }}>
+                    <li><strong>Findings Section (20 Marks / 20%)</strong>: Detailed lesion size, anatomical location, and organ observations.</li>
+                    <li><strong>Impression / Conclusion (20 Marks / 20%)</strong>: Definitive diagnostic summary & actionable clinical recommendations.</li>
+                    <li><strong>Patient Demographics (10 Marks / 10%)</strong>: Name, MRN, DOB, Age, Gender, and Study Date.</li>
+                    <li><strong>Clinical History (10 Marks / 10%)</strong>: Chief complaint, symptoms, and clinical question.</li>
+                    <li><strong>Procedure Details (10 Marks / 10%)</strong>: Technique, contrast agent, pulse sequences, slice thickness.</li>
+                    <li><strong>Medical Terminology (10 Marks / 10%)</strong>: RadLex vocabulary precision, quantitative metrics.</li>
+                    <li><strong>Template Compliance (10 Marks / 10%)</strong>: ACR 7-section structured headers.</li>
+                    <li><strong>Formatting, Consistency & Grammar (15 Marks / 15%)</strong>: Paragraph spacing, laterality agreement (right vs left), and completeness.</li>
+                  </ul>
+                </div>
+
+                {/* Column 2: Why Marks Are Deducted */}
+                <div style={{ background: '#FFF', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontWeight: 800, color: '#DC2626', marginBottom: '8px', textTransform: 'uppercase', fontSize: '11px' }}>
+                    ⚠️ Why Marks Are Deducted (Deficiency Penalties):
+                  </div>
+                  <ul style={{ paddingLeft: '16px', margin: 0, color: '#334155' }}>
+                    <li><strong style={{ color: '#DC2626' }}>Critical Omission (-20 pts)</strong>: Complete absence of Findings or Impression section.</li>
+                    <li><strong style={{ color: '#DC2626' }}>Laterality Contradiction (-15 pts)</strong>: Mismatch between Findings and Impression (e.g. Right vs Left).</li>
+                    <li><strong style={{ color: '#D97706' }}>Missing History/Technique (-10 pts)</strong>: Omission of clinical indication or imaging technique.</li>
+                    <li><strong style={{ color: '#D97706' }}>Vague Qualifiers (-5 pts)</strong>: Non-specific terms like "probably", "appears to be", "cannot rule out".</li>
+                    <li><strong style={{ color: '#475569' }}>Missing Comparison (-5 pts)</strong>: Failure to document prior imaging comparison.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Red Flags Panel */}
           {res.red_flags && res.red_flags.length > 0 && (
             <div className="enterprise-card" style={{ borderLeft: '4px solid #DC2626', padding: '14px' }}>
@@ -183,7 +230,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                   Explicit Mathematical Score Deductions (-{res.deductions_log.reduce((acc, d) => acc + Math.abs(d.points), 0)} pts total)
                 </span>
                 <span style={{ fontSize: '11px', color: '#991B1B', fontWeight: 700 }}>
-                  Reason • Impact • Suggested Fix
+                  Reason • Scope of Correction • QA Remarks • Impact • Suggested Fix
                 </span>
               </div>
 
@@ -230,7 +277,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                 11-Dimension Component Breakdown
               </span>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                Expand row to view evaluation details
+                Click any row to view scoring criteria & deduction reasons
               </span>
             </div>
 
@@ -241,7 +288,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                   <th>Weight</th>
                   <th>Score</th>
                   <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Details</th>
+                  <th style={{ textAlign: 'right' }}>Scoring Criteria & Details</th>
                 </tr>
               </thead>
               <tbody>
@@ -250,6 +297,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                   const isExpanded = expandedDim === dimId;
                   const pass = dim.score >= (dim.max_marks * 0.9);
                   const warning = dim.score >= (dim.max_marks * 0.6) && dim.score < (dim.max_marks * 0.9);
+                  const lostPoints = dim.max_marks - dim.score;
 
                   return (
                     <React.Fragment key={dimId}>
@@ -278,14 +326,30 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
 
                       {isExpanded && (
                         <tr>
-                          <td colSpan="5" style={{ background: 'var(--surface-muted)', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
-                            <ul style={{ fontSize: '11.5px', color: 'var(--text-primary)', margin: 0, paddingLeft: '18px' }}>
-                              {(dim.details || []).map((detail, i) => (
-                                <li key={i} style={{ marginBottom: '3px', color: detail.includes('Information Not Documented') || detail.includes('Missing') ? '#B91C1C' : 'var(--text-primary)' }}>
-                                  {detail}
-                                </li>
-                              ))}
-                            </ul>
+                          <td colSpan="5" style={{ background: 'var(--surface-muted)', padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {/* Deduction Explanation Banner if marks were lost */}
+                              {lostPoints > 0 ? (
+                                <div style={{ background: '#FEE2E2', borderLeft: '3px solid #DC2626', padding: '8px 12px', borderRadius: '4px', fontSize: '11.5px', color: '#991B1B', fontWeight: 700 }}>
+                                  ⚠️ Deduction Reason (-{lostPoints} pts): Marks were deducted because required clinical components or standard terminology were incomplete in this section.
+                                </div>
+                              ) : (
+                                <div style={{ background: '#DCFCE7', borderLeft: '3px solid #16A34A', padding: '8px 12px', borderRadius: '4px', fontSize: '11.5px', color: '#15803D', fontWeight: 700 }}>
+                                  ✓ Full Marks Awarded ({dim.score}/{dim.max_marks}): Section meets all ACR practice parameter standards.
+                                </div>
+                              )}
+
+                              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: '4px' }}>
+                                Evaluation Findings & Section Items:
+                              </div>
+                              <ul style={{ fontSize: '12px', color: 'var(--text-primary)', margin: 0, paddingLeft: '18px' }}>
+                                {(dim.details || []).map((detail, i) => (
+                                  <li key={i} style={{ marginBottom: '4px', color: detail.includes('Information Not Documented') || detail.includes('Missing') || detail.includes('Deficiency') ? '#B91C1C' : 'var(--text-primary)' }}>
+                                    {detail}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                           </td>
                         </tr>
                       )}
@@ -298,15 +362,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
         </>
       )}
 
-      {/* TAB 2: GRAMMARLY IN-TEXT HIGHLIGHTER */}
-      {activeTab === 'highlighter' && (
-        <InteractiveReportHighlighter
-          reportText={reportText}
-          highlights={res.highlights}
-        />
-      )}
-
-      {/* TAB 3: SIDE-BY-SIDE DIFF VIEW */}
+      {/* TAB 2: SIDE-BY-SIDE DIFF VIEW */}
       {activeTab === 'diff' && (
         <ReportDiffView
           originalText={reportText}
@@ -315,7 +371,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
         />
       )}
 
-      {/* TAB 4: VERSION HISTORY */}
+      {/* TAB 3: VERSION HISTORY */}
       {activeTab === 'versions' && (
         <VersionHistoryDrawer
           versions={versions}
