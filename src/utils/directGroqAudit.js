@@ -1,6 +1,6 @@
 /**
  * Client-side Direct AI Audit Engine (Groq / Gemini API)
- * Fallback when Python Flask backend is offline or app is hosted on static pages (GitHub Pages).
+ * Features multi-model fallback (e.g. llama-3.1-8b-instant if 70b is blocked at project level).
  */
 
 export async function directGroqAudit({ report_text, modality, mandatory_sections, provider = 'groq', api_key = '' }) {
@@ -13,7 +13,7 @@ Return ONLY a raw JSON object with NO markdown formatting, NO backticks, NO extr
 JSON Schema:
 {
   "overall_score": 85,
-  "readiness": "Ready for Sign-off" | "Minor Revision Needed" | "Major Revision Required",
+  "readiness": "Ready for Sign-off",
   "score_breakdown": {
     "Patient Demographics": 10,
     "Clinical History": 10,
@@ -32,7 +32,7 @@ JSON Schema:
     { "name": "Patient Demographics", "present": true, "details": "Found patient name, MRN, study date" }
   ],
   "highlights": [
-    { "type": "missing" | "vague" | "formatting" | "terminology", "text": "matched phrase", "explanation": "Why flagged", "suggestion": "Fix" }
+    { "type": "missing", "text": "matched phrase", "explanation": "Why flagged", "suggestion": "Fix" }
   ],
   "suggested_improvements": [
     { "category": "Missing Information", "text": "Suggestion detail" }
@@ -51,31 +51,52 @@ ${report_text}
 """`;
 
   if (provider === 'groq') {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.1,
-        response_format: { type: 'json_object' }
-      })
-    });
+    // Model fallback sequence in case 70B is blocked at project limits
+    const models = [
+      'llama-3.1-8b-instant',
+      'llama-3.3-70b-versatile',
+      'llama3-70b-8192',
+      'llama3-8b-8192',
+      'mixtral-8x7b-32768',
+    ];
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Groq API returned error ${res.status}`);
+    let lastError = null;
+
+    for (const model of models) {
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.1,
+            response_format: { type: 'json_object' }
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          lastError = err.error?.message || `Groq API returned HTTP ${res.status}`;
+          // If model is blocked or not found, continue to next model in list
+          continue;
+        }
+
+        const data = await res.json();
+        const content = data.choices[0]?.message?.content || '{}';
+        return JSON.parse(content);
+      } catch (err) {
+        lastError = err.message;
+      }
     }
 
-    const data = await res.json();
-    const content = data.choices[0]?.message?.content || '{}';
-    return JSON.parse(content);
+    throw new Error(lastError || 'Failed to connect to Groq API. Please check your model limits or API key.');
   }
 
   throw new Error('Unsupported direct provider');
