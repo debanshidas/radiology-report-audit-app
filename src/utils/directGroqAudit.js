@@ -1,6 +1,6 @@
 /**
  * Client-side Direct AI Audit Engine (Groq / Gemini API)
- * Standardizes AI suggestions, remarks, scope of correction, and guarantees ALL 11 ACR DIMENSIONS.
+ * Standardizes AI suggestions, remarks, scope of correction, and guarantees 100% mathematical consistency.
  */
 
 export async function directGroqAudit({ report_text, modality, mandatory_sections, provider = 'groq', api_key = '' }) {
@@ -8,68 +8,70 @@ export async function directGroqAudit({ report_text, modality, mandatory_section
 
   const systemPrompt = `You are a Senior Radiology Quality Assurance Officer and ACR Audit Specialist.
 Analyze the provided radiology report and evaluate its quality against ACR practice parameters across ALL 11 DIMENSIONS.
-Return ONLY a raw JSON object with NO markdown formatting, NO backticks, NO extra text.
+CRITICAL MATHEMATICAL RULE: The "quality_score" MUST mathematically equal 100 minus the sum of all deduction points in "deductions_log". For example, if deductions are -10 pts and -5 pts (total -15 pts), the quality_score MUST be 85.
 
 Required JSON Output Schema:
 {
   "quality_score": 85,
   "readiness_status": "Ready for Sign-off" | "Minor Revision Needed" | "Major Revision Required" | "Not Ready for Clinical Sign-off",
-  "overall_justification": "Structured, detailed, easy-to-understand summary explaining exactly why marks were deducted across the 11 dimensions.",
+  "overall_justification": "Structured, detailed summary explaining why marks were deducted.",
   "effective_modality": "${modality || 'Chest X-Ray'}",
-  "dimensions": [
-    { "id": "patient_demographics", "name": "Patient Demographics", "weight": "10%", "score": 10, "max_marks": 10, "details": ["Patient Name, MRN, and DOB documented."] },
-    { "id": "clinical_history", "name": "Clinical History / Indication", "weight": "10%", "score": 10, "max_marks": 10, "details": ["Chief complaint and clinical question evaluated."] },
-    { "id": "procedure_details", "name": "Procedure Details", "weight": "10%", "score": 10, "max_marks": 10, "details": ["Technique, pulse sequences, and contrast dosage evaluated."] },
-    { "id": "findings", "name": "Findings", "weight": "20%", "score": 18, "max_marks": 20, "details": ["Anatomical observations and lesion measurements."] },
-    { "id": "impression", "name": "Impression / Conclusion", "weight": "20%", "score": 18, "max_marks": 20, "details": ["Diagnostic summary and clinical recommendations."] },
-    { "id": "terminology", "name": "Medical Terminology", "weight": "10%", "score": 10, "max_marks": 10, "details": ["RadLex terminology precision and quantitative metrics."] },
-    { "id": "template", "name": "Template Compliance", "weight": "10%", "score": 10, "max_marks": 10, "details": ["ACR 7-section structured headers."] },
-    { "id": "formatting", "name": "Formatting & Structure", "weight": "5%", "score": 5, "max_marks": 5, "details": ["Paragraph legibility and spacing."] },
-    { "id": "consistency", "name": "Consistency (Findings vs Impression)", "weight": "5%", "score": 5, "max_marks": 5, "details": ["Laterality agreement (right vs left)."] },
-    { "id": "grammar", "name": "Grammar & Documentation Quality", "weight": "5%", "score": 5, "max_marks": 5, "details": ["Absence of typos or template errors."] },
-    { "id": "completeness", "name": "Overall Clinical Completeness", "weight": "5%", "score": 5, "max_marks": 5, "details": ["Comparison study and signature."] }
-  ],
-  "suggestions": [
-    {
-      "category": "Missing Information" | "Clinical Alignment" | "Medical Terminology" | "Formatting",
-      "severity": "High" | "Medium" | "Low",
-      "scope_of_correction": "Add Missing Section" | "Terminology Revision" | "Laterality Correction" | "Format Standardization",
-      "finding": "Specific quality defect identified in report",
-      "original": "Exact text snippet from original report or N/A if missing",
-      "recommended": "Exact recommended correction text to use in final report",
-      "remarks": "Senior QA Officer detailed observation remarks explaining why this item failed and how to correct it",
-      "rationale": "Detailed explanation of clinical impact and why this change is necessary"
-    }
-  ],
-  "highlights": [
-    {
-      "type": "missing" | "vague" | "formatting" | "terminology",
-      "text": "exact phrase from text",
-      "explanation": "Why this text was flagged",
-      "suggestion": "Recommended fix"
-    }
-  ],
   "deductions_log": [
     {
       "points": -10,
-      "section": "Findings",
+      "section": "Procedure Details",
       "reason": "Missing procedure details and contrast agent specification",
       "scope_of_correction": "Add Missing Section",
       "remarks": "The report fails to specify imaging pulse sequence, slice thickness, or IV contrast volume.",
       "clinical_impact": "High risk of missing secondary pathologies or compromising technique reproducibility",
       "suggested_improvement": "Add Technique section specifying 100 mL Omnipaque 350 IV contrast"
+    },
+    {
+      "points": -5,
+      "section": "Comparison Study",
+      "reason": "Missing comparison study details",
+      "scope_of_correction": "Add Comparison Date",
+      "remarks": "No prior imaging comparison documented.",
+      "clinical_impact": "Prevents tracking longitudinal lesion progression",
+      "suggested_improvement": "Document prior chest CT date or state no priors available"
     }
   ],
+  "dimensions": [
+    { "id": "patient_demographics", "name": "Patient Demographics", "weight": "10%", "score": 10, "max_marks": 10, "details": ["Patient Name, MRN, and DOB documented."] },
+    { "id": "clinical_history", "name": "Clinical History / Indication", "weight": "10%", "score": 10, "max_marks": 10, "details": ["Chief complaint and clinical question evaluated."] },
+    { "id": "procedure_details", "name": "Procedure Details", "weight": "10%", "score": 0, "max_marks": 10, "details": ["Technique missing contrast agent volume (-10 pts)."] },
+    { "id": "findings", "name": "Findings", "weight": "20%", "score": 20, "max_marks": 20, "details": ["Anatomical observations and lesion measurements."] },
+    { "id": "impression", "name": "Impression / Conclusion", "weight": "20%", "score": 20, "max_marks": 20, "details": ["Diagnostic summary and clinical recommendations."] },
+    { "id": "terminology", "name": "Medical Terminology", "weight": "10%", "score": 10, "max_marks": 10, "details": ["RadLex terminology precision."] },
+    { "id": "template", "name": "Template Compliance", "weight": "10%", "score": 10, "max_marks": 10, "details": ["ACR 7-section structured headers."] },
+    { "id": "formatting", "name": "Formatting & Structure", "weight": "5%", "score": 5, "max_marks": 5, "details": ["Paragraph legibility."] },
+    { "id": "consistency", "name": "Consistency (Findings vs Impression)", "weight": "5%", "score": 5, "max_marks": 5, "details": ["Laterality agreement."] },
+    { "id": "grammar", "name": "Grammar & Documentation Quality", "weight": "5%", "score": 5, "max_marks": 5, "details": ["Absence of typos."] },
+    { "id": "completeness", "name": "Overall Clinical Completeness", "weight": "5%", "score": 0, "max_marks": 5, "details": ["Missing comparison study (-5 pts)."] }
+  ],
+  "suggestions": [
+    {
+      "category": "Procedure Details",
+      "severity": "Medium",
+      "scope_of_correction": "Add Missing Section",
+      "finding": "Missing procedure details and contrast agent specification",
+      "original": "N/A",
+      "recommended": "Add Technique section specifying pulse sequence and contrast dose.",
+      "remarks": "Senior QA Officer: Specify contrast volume for ACR compliance.",
+      "rationale": "Ensures technique reproducibility."
+    }
+  ],
+  "highlights": [],
   "sections": [
     { "name": "Patient Demographics", "present": true },
     { "name": "Clinical History / Indication", "present": true },
-    { "name": "Procedure Details", "present": true },
+    { "name": "Procedure Details", "present": false },
     { "name": "Comparison Study", "present": false },
     { "name": "Findings", "present": true },
     { "name": "Impression / Conclusion", "present": true },
     { "name": "Reporting Radiologist Signature", "present": true }
   ],
-  "ai_corrected_report": "Complete revised and corrected radiology report adhering to ACR standard 7-section structure."
+  "ai_corrected_report": "Complete revised radiology report in ACR standard format."
 }`;
 
   const userPrompt = `Modality: ${modality || 'Chest X-Ray'}
@@ -133,57 +135,29 @@ ${report_text}
 }
 
 /**
- * Normalizes raw LLM JSON response to guarantee all UI components receive expected fields.
+ * Normalizes raw LLM JSON response to guarantee 100% mathematical accuracy between score & deductions.
  */
 function normalizeAuditResult(parsed, requestedModality, originalReportText) {
-  const quality_score = parsed.quality_score ?? parsed.overall_score ?? 80;
-  const readiness_status = parsed.readiness_status ?? parsed.readiness ?? (quality_score >= 90 ? 'Ready for Sign-off' : 'Revision Needed');
   const effective_modality = parsed.effective_modality ?? parsed.modality ?? requestedModality ?? 'Chest X-Ray';
 
-  // Normalize suggestions array
-  let suggestions = parsed.suggestions;
-  if (!Array.isArray(suggestions) || suggestions.length === 0) {
-    if (Array.isArray(parsed.suggested_improvements)) {
-      suggestions = parsed.suggested_improvements.map((item) => ({
-        category: item.category || 'General QA',
-        severity: item.severity || 'Medium',
-        scope_of_correction: item.scope_of_correction || 'Content Revision',
-        finding: item.text || item.finding || 'Clinical report improvement',
-        original: item.original || 'N/A',
-        recommended: item.recommended || item.text || 'Follow ACR practice guidelines',
-        remarks: item.remarks || 'Senior QA review note: Verify alignment with clinical indications.',
-        rationale: item.rationale || item.explanation || 'Improves report clarity and diagnostic accuracy.'
-      }));
-    } else {
-      suggestions = [
-        {
-          category: 'Clinical Completeness',
-          severity: quality_score < 70 ? 'High' : 'Medium',
-          scope_of_correction: 'Section Structuring',
-          finding: 'Review report sections for complete ACR compliance',
-          original: originalReportText ? originalReportText.substring(0, 100) + '...' : 'N/A',
-          recommended: 'Ensure Demographics, History, Technique, Findings, and Impression are present.',
-          remarks: 'Ensure all mandatory clinical sections are explicitly labeled.',
-          rationale: 'Complete structuring prevents clinical misinterpretation.'
-        }
-      ];
-    }
-  } else {
-    suggestions = suggestions.map((s) => ({
-      category: s.category || 'Clinical QA',
-      severity: s.severity || 'Medium',
-      scope_of_correction: s.scope_of_correction || (s.category?.includes('Missing') ? 'Add Missing Section' : 'Wording & Style Revision'),
-      finding: s.finding || 'Quality improvement recommendation',
-      original: s.original || 'N/A',
-      recommended: s.recommended || 'Follow ACR standard guidelines',
-      remarks: s.remarks || `Senior QA Officer Observation: Address ${s.category || 'QA findings'} prior to final sign-off.`,
-      rationale: s.rationale || 'Enhances clinical record accuracy and risk management.'
+  // Normalize suggestions
+  let suggestions = Array.isArray(parsed.suggestions) ? parsed.suggestions : [];
+  if (suggestions.length === 0 && Array.isArray(parsed.suggested_improvements)) {
+    suggestions = parsed.suggested_improvements.map((item) => ({
+      category: item.category || 'General QA',
+      severity: item.severity || 'Medium',
+      scope_of_correction: item.scope_of_correction || 'Content Revision',
+      finding: item.text || item.finding || 'Clinical report improvement',
+      original: item.original || 'N/A',
+      recommended: item.recommended || item.text || 'Follow ACR practice guidelines',
+      remarks: item.remarks || 'Senior QA review note: Verify alignment with clinical indications.',
+      rationale: item.rationale || item.explanation || 'Improves report clarity and diagnostic accuracy.'
     }));
   }
 
   // Normalize deductions log
-  let deductions_log = parsed.deductions_log;
-  if (!Array.isArray(deductions_log) || deductions_log.length === 0) {
+  let deductions_log = Array.isArray(parsed.deductions_log) ? parsed.deductions_log : [];
+  if (deductions_log.length === 0 && suggestions.length > 0) {
     deductions_log = suggestions.map((s) => ({
       points: s.severity === 'High' ? -15 : s.severity === 'Medium' ? -10 : -5,
       section: s.category || 'General QA',
@@ -195,7 +169,7 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
     }));
   } else {
     deductions_log = deductions_log.map((d) => ({
-      points: d.points || -5,
+      points: d.points < 0 ? d.points : -Math.abs(d.points || 5),
       section: d.section || 'General QA',
       reason: d.reason || 'Omission or formatting defect',
       scope_of_correction: d.scope_of_correction || (d.points < -10 ? 'Major Section Revision' : 'Minor Adjustment'),
@@ -205,32 +179,39 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
     }));
   }
 
-  // Build a rich, structured overall_justification summary if missing or brief
+  // Calculate total deducted points
+  const totalDeducted = deductions_log.reduce((acc, d) => acc + Math.abs(d.points), 0);
+
+  // STRICT MATHEMATICAL SYNCHRONIZATION: quality_score = 100 - totalDeducted
+  const quality_score = Math.max(0, Math.min(100, 100 - totalDeducted));
+
+  // Determine readiness status based on exact mathematical score
+  let readiness_status = 'Ready for Sign-off';
+  if (quality_score >= 90) readiness_status = 'Ready for Sign-off';
+  else if (quality_score >= 80) readiness_status = 'Minor Revision Needed';
+  else if (quality_score >= 60) readiness_status = 'Major Revision Required';
+  else readiness_status = 'Not Ready for Clinical Sign-off';
+
+  // Build a rich, structured overall_justification summary
   let overall_justification = parsed.overall_justification || parsed.score_justification;
-  if (!overall_justification || overall_justification.length < 50) {
-    const totalDeducted = deductions_log.reduce((acc, d) => acc + Math.abs(d.points), 0);
-    overall_justification = `Report evaluated with score ${quality_score}/100 (${readiness_status}). Explicit deduction analysis (-${totalDeducted} pts total):\n` +
+  if (!overall_justification || overall_justification.length < 30) {
+    overall_justification = `Report evaluated with mathematical score ${quality_score}/100 (${readiness_status}). Deductions sum to -${totalDeducted} pts total:\n` +
       deductions_log.map((d, i) => `${i + 1}. ${d.reason} (${d.points} pts): ${d.remarks || d.suggested_improvement}`).join('\n');
   }
 
-  // Normalize highlights
+  // Normalize highlights & sections
   const highlights = Array.isArray(parsed.highlights) ? parsed.highlights : [];
-
-  // Normalize sections
-  let sections = parsed.sections;
-  if (!Array.isArray(sections)) {
-    sections = [
-      { name: 'Patient Demographics', present: true },
-      { name: 'Clinical History / Indication', present: true },
-      { name: 'Procedure Details', present: true },
-      { name: 'Findings', present: true },
-      { name: 'Impression / Conclusion', present: true }
-    ];
-  }
+  let sections = Array.isArray(parsed.sections) ? parsed.sections : [
+    { name: 'Patient Demographics', present: true },
+    { name: 'Clinical History / Indication', present: true },
+    { name: 'Procedure Details', present: true },
+    { name: 'Findings', present: true },
+    { name: 'Impression / Conclusion', present: true }
+  ];
 
   const ai_corrected_report = parsed.ai_corrected_report ?? parsed.revised_report ?? originalReportText;
 
-  // GUARANTEE ALL 11 ACR DIMENSIONS
+  // GUARANTEE ALL 11 ACR DIMENSIONS WITH MATHEMATICALLY ALIGNED SCORES
   const fullDefaultDimensions = [
     { id: 'patient_demographics', name: 'Patient Demographics', weight: '10%', score: Math.min(10, Math.round(quality_score * 0.1)), max_marks: 10, details: ['Patient Name, MRN, DOB, Age, Gender, and Study Date evaluated.'] },
     { id: 'clinical_history', name: 'Clinical History / Indication', weight: '10%', score: Math.min(10, Math.round(quality_score * 0.1)), max_marks: 10, details: ['Chief complaint, indication, and clinical diagnostic question evaluated.'] },
@@ -245,10 +226,7 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
     { id: 'completeness', name: 'Overall Clinical Completeness', weight: '5%', score: Math.min(5, Math.round(quality_score * 0.05)), max_marks: 5, details: ['Comparison study and radiologist signature.'] }
   ];
 
-  let dimensions = parsed.dimensions;
-  if (!Array.isArray(dimensions) || dimensions.length < 11) {
-    dimensions = fullDefaultDimensions;
-  }
+  let dimensions = Array.isArray(parsed.dimensions) && parsed.dimensions.length >= 11 ? parsed.dimensions : fullDefaultDimensions;
 
   return {
     audit_id: `RAD-QA-2026-${Math.floor(1000 + Math.random() * 9000)}`,

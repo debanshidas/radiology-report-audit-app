@@ -34,14 +34,21 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
   }
 
   const res = auditResult;
-  const gradeInfo = getScoreGrade(res.quality_score);
+
+  // Calculate exact total deducted points and enforce strict mathematical score alignment:
+  const totalDeductedPoints = (res.deductions_log || []).reduce((acc, d) => acc + Math.abs(d.points || 0), 0);
+  const effectiveScore = (res.deductions_log && res.deductions_log.length > 0)
+    ? Math.max(0, 100 - totalDeductedPoints)
+    : (res.quality_score ?? 80);
+
+  const gradeInfo = getScoreGrade(effectiveScore);
 
   // Dynamically resolve original and corrected report text so it is NEVER blank
   const effectiveOriginalText = reportText || res.original_report_text || res.report_text || res.reportText || '';
   const effectiveCorrectedText = res.ai_corrected_report || res.revised_report || effectiveOriginalText;
 
   const versionList = [
-    { id: 'v1', name: 'Version 1 (Original Upload)', timestamp: 'Original Study', author: 'Uploaded Report', score: res.quality_score || 0, text: effectiveOriginalText, status: 'Draft' },
+    { id: 'v1', name: 'Version 1 (Original Upload)', timestamp: 'Original Study', author: 'Uploaded Report', score: effectiveScore, text: effectiveOriginalText, status: 'Draft' },
     { id: 'v2', name: 'Version 2 (AI Corrected ACR Standard)', timestamp: 'AI Evaluation', author: 'RadAudit Engine', score: 98, text: effectiveCorrectedText, status: 'Suggested' },
   ];
 
@@ -183,10 +190,10 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
               <div style={{ position: 'relative', width: '90px', height: '90px', margin: '10px auto' }}>
                 <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
                   <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#DDE7F0" strokeWidth="3" />
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1977CC" strokeWidth="3" strokeDasharray={`${res.quality_score}, 100`} />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1977CC" strokeWidth="3" strokeDasharray={`${effectiveScore}, 100`} />
                 </svg>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '24px', fontWeight: 900, color: '#1977CC', lineHeight: 1 }}>{res.quality_score}</span>
+                  <span style={{ fontSize: '24px', fontWeight: 900, color: '#1977CC', lineHeight: 1 }}>{effectiveScore}</span>
                   <span style={{ fontSize: '9px', color: '#6C757D', fontWeight: 700 }}>/ 100</span>
                 </div>
               </div>
