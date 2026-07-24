@@ -191,7 +191,7 @@ export default function UploadPage({
                   Enterprise Demo Case Library
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                  35+ pre-loaded hospital cases across 25 modalities
+                  50 authentic hospital cases across 25 modalities and 5 quality tiers
                 </div>
               </div>
             </div>
@@ -209,7 +209,7 @@ export default function UploadPage({
                 className="btn-primary"
                 style={{ fontSize: '12px', padding: '6px 14px' }}
               >
-                <BookOpen size={13} /> Browse 35+ Cases →
+                <BookOpen size={13} /> Browse 50 Cases →
               </button>
             </div>
           </div>
