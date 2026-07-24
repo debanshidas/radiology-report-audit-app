@@ -13,10 +13,30 @@ function getScoreGrade(score) {
   return { grade: 'Not Ready', status: 'Not Ready for Clinical Sign-off', bg: '#FFEBEE', text: '#D32F2F', border: '#FFCDD2' };
 }
 
+const getDimensionDefinition = (dim) => {
+  const key = (dim.id || '').toLowerCase();
+  const name = (dim.name || '').toLowerCase();
+
+  if (key.includes('demographics') || name.includes('demographics')) return 'Evaluates presence and completeness of mandatory patient identification fields including Patient Name, Medical Record Number (MRN), Date of Birth (DOB), Age, Gender, and Study Date.';
+  if (key.includes('history') || name.includes('history') || name.includes('indication')) return 'Verifies documentation of chief clinical complaint, relevant symptoms, clinical history, and specific diagnostic question submitted by the ordering physician.';
+  if (key.includes('procedure') || name.includes('procedure') || name.includes('technique')) return 'Checks documentation of imaging technique, pulse sequences, slice thickness, IV/Oral contrast agent type, contrast volume, and administration timing.';
+  if (key.includes('findings') || name.includes('findings')) return 'Systematic anatomical evaluation of organ systems, lesion size measurements (mm/cm), radiodensity, and location. Body text must be free of critical diagnostic omissions.';
+  if (key.includes('impression') || name.includes('impression') || name.includes('conclusion')) return 'Definitive diagnostic summary synthesizing key findings, primary & differential diagnoses, BI-RADS/LI-RADS categories, and actionable clinical management recommendations.';
+  if (key.includes('terminology') || name.includes('terminology')) return 'Evaluates usage of standardized RadLex terminology, quantitative measurements, and formal medical vocabulary over vague informal phrases (e.g. "appears to be").';
+  if (key.includes('template') || name.includes('template')) return 'Confirms adherence to ACR 7-section structured reporting guidelines (Demographics, History, Technique, Comparison, Findings, Impression, Signature).';
+  if (key.includes('formatting') || name.includes('formatting')) return 'Assesses paragraph legibility, line breaks, bulleted list structure, and overall visual document organization.';
+  if (key.includes('consistency') || name.includes('consistency') || name.includes('laterality')) return 'Detects contradictory statements between Findings and Impression, specifically checking for right vs. left laterality agreement and organ descriptions.';
+  if (key.includes('grammar') || name.includes('grammar') || name.includes('documentation')) return 'Identifies typos, incomplete sentence fragments, dangling modifiers, or unreplaced template brackets [Insert Text].';
+  if (key.includes('completeness') || name.includes('completeness')) return 'Verifies comparison with prior imaging studies (date and modality) and authenticating radiologist signature line.';
+
+  return 'Evaluates clinical report quality according to ACR Practice Parameters and RadLex vocabulary standards.';
+};
+
 export default function QualityDashboardPage({ auditResult, reportText, setReportText, setActivePage }) {
   const [activeTab, setActiveTab] = useState('overview'); // overview, diff, versions
   const [expandedDim, setExpandedDim] = useState(null);
   const [showScoringGuide, setShowScoringGuide] = useState(false);
+  const [showAllDefinitions, setShowAllDefinitions] = useState(false);
   const [activeVersionId, setActiveVersionId] = useState('v1');
 
   if (!auditResult) {
@@ -293,13 +313,24 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
           <div className="medicare-card" style={{ padding: '0', overflow: 'hidden' }}>
             <div style={{
               background: '#F1F7FC', borderBottom: '1px solid #DDE7F0',
-              padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              flexWrap: 'wrap', gap: '8px'
             }}>
-              <span style={{ fontSize: '12px', fontWeight: 800, color: '#2C4964', textTransform: 'uppercase' }}>
-                11-Dimension Component Breakdown
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: '#2C4964', textTransform: 'uppercase' }}>
+                  11-Dimension Component Breakdown
+                </span>
+                <button
+                  onClick={() => setShowAllDefinitions(!showAllDefinitions)}
+                  className="btn-medicare-outline"
+                  style={{ fontSize: '11px', padding: '4px 10px' }}
+                >
+                  <HelpCircle size={13} color="#1977CC" /> {showAllDefinitions ? 'Hide All Definitions' : 'Show What Each Dimension Means (?)'}
+                </button>
+              </div>
+
               <span style={{ fontSize: '11px', color: '#6C757D' }}>
-                Click any row to view scoring criteria & deduction reasons
+                Click row or (?) icon to view dimension definitions & scoring criteria
               </span>
             </div>
 
@@ -327,7 +358,24 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                         onClick={() => setExpandedDim(isExpanded ? null : dimId)}
                         style={{ cursor: 'pointer', background: isExpanded ? '#F1F7FC' : 'transparent' }}
                       >
-                        <td style={{ fontWeight: 700, color: '#2C4964' }}>{dim.name}</td>
+                        <td style={{ fontWeight: 700, color: '#2C4964' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>{dim.name}</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedDim(isExpanded ? null : dimId);
+                              }}
+                              style={{
+                                background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                              }}
+                              title="Click to see what this dimension evaluates"
+                            >
+                              <HelpCircle size={14} color="#1977CC" />
+                            </button>
+                          </div>
+                        </td>
                         <td style={{ color: '#6C757D', fontWeight: 600 }}>{dim.weight}</td>
                         <td style={{ fontWeight: 800, color: pass ? '#15803D' : warning ? '#B45309' : '#D32F2F' }}>
                           {dim.score} / {dim.max_marks}
@@ -346,10 +394,21 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                         </td>
                       </tr>
 
-                      {isExpanded && (
+                      {(isExpanded || showAllDefinitions) && (
                         <tr>
                           <td colSpan="5" style={{ background: '#F8FAFC', padding: '16px 20px', borderBottom: '1px solid #DDE7F0' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              
+                              {/* What This Dimension Evaluates (QA Definition Box) */}
+                              <div style={{ background: '#EBF5FF', borderLeft: '4px solid #1977CC', padding: '10px 14px', borderRadius: '6px' }}>
+                                <div style={{ fontWeight: 800, color: '#1977CC', fontSize: '11px', textTransform: 'uppercase', marginBottom: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <HelpCircle size={14} color="#1977CC" /> What This Dimension Evaluates (QA Definition):
+                                </div>
+                                <div style={{ fontSize: '12.5px', color: '#2C4964', lineHeight: 1.5, fontWeight: 500 }}>
+                                  {getDimensionDefinition(dim)}
+                                </div>
+                              </div>
+
                               {/* Deduction Explanation Banner if marks were lost */}
                               {lostPoints > 0 ? (
                                 <div style={{ background: '#FFEBEE', borderLeft: '3px solid #D32F2F', padding: '8px 12px', borderRadius: '4px', fontSize: '11.5px', color: '#D32F2F', fontWeight: 700 }}>
@@ -361,7 +420,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                                 </div>
                               )}
 
-                              <div style={{ fontSize: '11px', fontWeight: 800, color: '#6C757D', textTransform: 'uppercase', marginTop: '4px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 800, color: '#6C757D', textTransform: 'uppercase', marginTop: '2px' }}>
                                 Evaluation Findings & Section Items:
                               </div>
                               <ul style={{ fontSize: '12px', color: '#2C4964', margin: 0, paddingLeft: '18px' }}>
