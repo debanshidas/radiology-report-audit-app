@@ -204,7 +204,7 @@ export default function App() {
         auditCount={historyItems.length}
       />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, height: '100vh', overflow: 'hidden' }}>
         <Header
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
@@ -218,7 +218,7 @@ export default function App() {
         <main
           ref={mainRef}
           onScroll={handleMainScroll}
-          style={{ flex: 1, padding: '24px', overflowY: 'auto', position: 'relative' }}
+          style={{ flex: 1, minHeight: 0, padding: '24px', overflowY: 'auto', overflowX: 'hidden', position: 'relative', WebkitOverflowScrolling: 'touch' }}
         >
           <div>
             {activePage === 'dashboard' && <DashboardPage setActivePage={setActivePage} setReportText={setReportText} serverConnected={serverConnected} />}
