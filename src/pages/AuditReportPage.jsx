@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FileCheck2, Download, ShieldCheck, AlertCircle } from 'lucide-react';
+import { apiFetch } from '../utils/apiClient';
 import AICautionNotice from '../components/AICautionNotice';
 import { downloadPdfBlob } from '../utils/downloadHelper';
 
@@ -22,7 +23,7 @@ export default function AuditReportPage({ auditResult, modality }) {
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      const resp = await fetch('/api/generate-pdf', {
+      const resp = await apiFetch('/api/generate-pdf', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: 'radiology_report.txt', modality: modality || res.effective_modality || 'Chest X-Ray', audit_result: res })
       });

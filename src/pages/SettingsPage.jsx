@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Sun, Moon, Wifi, WifiOff, Cpu, RefreshCw, CheckCircle2, Key, Eye, EyeOff, Save, Lock, Check } from 'lucide-react';
+import { apiFetch } from '../utils/apiClient';
 
 export default function SettingsPage({ theme, setTheme, serverConnected, setServerConnected, provider, setProvider }) {
   const [checking, setChecking] = useState(false);
@@ -10,7 +11,7 @@ export default function SettingsPage({ theme, setTheme, serverConnected, setServ
     setChecking(true);
     const start = Date.now();
     try {
-      const r = await fetch(`/api/status?provider=${provider || 'groq'}`);
+      const r = await apiFetch(`/api/status?provider=${provider || 'groq'}`);
       const data = await r.json();
       setLatency(Date.now() - start);
       if (setServerConnected) setServerConnected(Boolean(r.ok && data.online));
@@ -218,7 +219,7 @@ function ApiKeyCard({ provider, checkStatus, cardStyle }) {
       localStorage.setItem(`${(provider || 'groq')}_api_key`, apiKey.trim());
 
       // Send to server endpoint
-      const res = await fetch('/api/save-key', {
+      const res = await apiFetch('/api/save-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ provider: provider || 'groq', api_key: apiKey.trim() }),

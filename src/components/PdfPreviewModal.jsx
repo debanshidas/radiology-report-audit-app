@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X, Eye, FileText, Loader2 } from 'lucide-react';
+import { apiFetch } from '../utils/apiClient';
 import { downloadPdfBlob } from '../utils/downloadHelper';
 
 export default function PdfPreviewModal({ isOpen, onClose, auditResult, modality, filename = 'radiology_report.txt' }) {
@@ -20,7 +21,7 @@ export default function PdfPreviewModal({ isOpen, onClose, auditResult, modality
   const fetchPdf = async () => {
     setIsLoading(true);
     try {
-      const resp = await fetch('/api/generate-pdf', {
+      const resp = await apiFetch('/api/generate-pdf', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename,

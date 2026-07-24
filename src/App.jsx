@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import Header from './components/Header';
+import { apiFetch } from './utils/apiClient';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
 import ReportViewer from './components/ReportViewer';
@@ -59,7 +60,7 @@ export default function App() {
 
   useEffect(() => {
     const checkServer = () => {
-      fetch(`/api/status?provider=${provider}`)
+      apiFetch(`/api/status?provider=${provider}`)
         .then((r) => r.json().then((d) => setServerConnected(Boolean(r.ok && d.online))))
         .catch(() => setServerConnected(false));
     };
@@ -78,7 +79,7 @@ export default function App() {
     setTimeout(() => setCurrentStep(3), 1200);
 
     try {
-      const response = await fetch('/api/analyze', {
+      const response = await apiFetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

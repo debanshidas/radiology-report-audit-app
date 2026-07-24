@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Upload, FileText, Trash2, Play, Sparkles, CheckCircle2, RefreshCw, File, BookOpen, Shuffle, AlertCircle } from 'lucide-react';
 import AICautionNotice from '../components/AICautionNotice';
 import DemoLibraryModal from '../components/DemoLibraryModal';
+import { apiFetch } from '../utils/apiClient';
 import { DEMO_REPORTS } from '../data/demoReports';
 
 const SECTION_OPTIONS = [
@@ -64,7 +65,7 @@ export default function UploadPage({
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await fetch('/api/upload', { method: 'POST', body: formData });
+      const response = await apiFetch('/api/upload', { method: 'POST', body: formData });
       const data = await response.json();
 
       if (!response.ok || !data.text) {

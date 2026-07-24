@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { History, Search, Filter, Download, Eye, Trash2, Calendar, FileText, CheckCircle2, AlertTriangle, XCircle, ArrowUpDown } from 'lucide-react';
 import AICautionNotice from '../components/AICautionNotice';
+import { apiFetch } from '../utils/apiClient';
 import { downloadPdfBlob } from '../utils/downloadHelper';
 
 export default function AnalysisHistoryPage({ historyItems, setHistoryItems, onSelectAudit, setActivePage }) {
@@ -40,7 +41,7 @@ export default function AnalysisHistoryPage({ historyItems, setHistoryItems, onS
 
   const handleDownloadPDF = async (item) => {
     try {
-      const resp = await fetch('/api/generate-pdf', {
+      const resp = await apiFetch('/api/generate-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

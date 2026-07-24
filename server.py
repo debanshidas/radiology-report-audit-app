@@ -26,6 +26,20 @@ from config import DEFAULT_PROVIDER, get_api_key, set_api_key
 app = Flask(__name__, static_folder='dist', static_url_path='')
 
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, DELETE'
+    return response
+
+
+@app.route('/api/<path:path>', methods=['OPTIONS'])
+def handle_options(path):
+    return '', 200
+
+
+
 # ── Static serving ────────────────────────────────────────────────────────────
 @app.route('/')
 def index():
