@@ -1,8 +1,8 @@
 import React from 'react';
-import { LayoutDashboard, Upload, History, FileCode, BarChart3, TrendingUp, ShieldCheck, ArrowRight, FileText, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
+import { LayoutDashboard, Upload, History, FileCode, BarChart3, TrendingUp, ShieldCheck, ArrowRight, FileText, CheckCircle2, AlertTriangle, Clock, ArrowLeft } from 'lucide-react';
 import { QualityTrendChart, ModalityDistributionChart } from '../components/AnalyticsCharts';
 
-export default function DashboardPage({ setActivePage, setReportText, setModality }) {
+export default function DashboardPage({ setActivePage, setReportText, setModality, onBackToWelcome }) {
   const handleLaunchSample = (mod, sampleText) => {
     setModality(mod);
     setReportText(sampleText);
@@ -13,11 +13,47 @@ export default function DashboardPage({ setActivePage, setReportText, setModalit
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Page Title & Context Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '14px' }}>
-        <div>
-          <h1 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
-            Radiology Quality Assurance — Executive Dashboard
-          </h1>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderBottom: '1px solid var(--border)', paddingBottom: '14px' }}>
+        {onBackToWelcome && (
+          <button
+            onClick={onBackToWelcome}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              fontSize: '11.5px',
+              borderRadius: '20px',
+              background: '#FFFFFF',
+              cursor: 'pointer',
+              border: '1px solid #CBD5E1',
+              color: '#1977CC',
+              fontWeight: 700,
+              alignSelf: 'flex-start',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.04)',
+              transition: 'all 0.2s ease',
+              fontFamily: "'Poppins', sans-serif"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#EBF5FF';
+              e.currentTarget.style.borderColor = '#1977CC';
+              e.currentTarget.style.transform = 'translateX(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#FFFFFF';
+              e.currentTarget.style.borderColor = '#CBD5E1';
+              e.currentTarget.style.transform = 'translateX(0)';
+            }}
+          >
+            <ArrowLeft size={13} /> Back to Welcome
+          </button>
+        )}
+        
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
+              Radiology Quality Assurance — Executive Dashboard
+            </h1>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
             Central Governance Console • Baystate Health System • Live HIS Feed
           </p>
@@ -30,6 +66,7 @@ export default function DashboardPage({ setActivePage, setReportText, setModalit
             <Upload size={13} /> Run New Report Audit →
           </button>
         </div>
+      </div>
       </div>
 
       {/* Quality Governance Metric Strip (Border-aligned compact toolbar) */}

@@ -234,8 +234,8 @@ export default function App() {
               style={{ flex: 1, minHeight: 0, padding: '24px', overflowY: 'auto', overflowX: 'hidden', position: 'relative', WebkitOverflowScrolling: 'touch' }}
             >
               <div>
-                {activePage === 'dashboard' && <DashboardPage setActivePage={setActivePage} setReportText={setReportText} serverConnected={serverConnected} />}
-                {activePage === 'upload' && <UploadPage reportText={reportText} setReportText={setReportText} modality={modality} setModality={setModality} mandatorySections={mandatorySections} setMandatorySections={setMandatorySections} onStartAudit={handleStartAudit} isLoading={isAnalyzing} />}
+                {activePage === 'dashboard' && <DashboardPage setActivePage={setActivePage} setReportText={setReportText} serverConnected={serverConnected} onBackToWelcome={() => setCurrentView('landing')} />}
+                {activePage === 'upload' && <UploadPage reportText={reportText} setReportText={setReportText} modality={modality} setModality={setModality} mandatorySections={mandatorySections} setMandatorySections={setMandatorySections} onStartAudit={handleStartAudit} isLoading={isAnalyzing} onBackToWelcome={() => setCurrentView('landing')} />}
                 {activePage === 'analysis' && <AnalysisPage isAnalyzing={isAnalyzing} currentStep={currentStep} auditResult={auditResult} analysisError={analysisError} setActivePage={setActivePage} provider={provider} />}
                 {activePage === 'quality' && <QualityDashboardPage auditResult={auditResult} reportText={activeReportText} setReportText={setReportText} setActivePage={setActivePage} />}
                 {activePage === 'suggestions' && <SuggestionsPage auditResult={auditResult} reportText={activeReportText} setReportText={setReportText} setActivePage={setActivePage} />}

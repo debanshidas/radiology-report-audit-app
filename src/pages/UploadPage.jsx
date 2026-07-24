@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, FileText, Trash2, Play, Sparkles, CheckCircle2, RefreshCw, File, BookOpen, Shuffle, AlertCircle } from 'lucide-react';
+import { Upload, FileText, Trash2, Play, Sparkles, CheckCircle2, RefreshCw, File, BookOpen, Shuffle, AlertCircle, ArrowLeft } from 'lucide-react';
 import AICautionNotice from '../components/AICautionNotice';
 import DemoLibraryModal from '../components/DemoLibraryModal';
 import { apiFetch } from '../utils/apiClient';
@@ -19,7 +19,8 @@ export default function UploadPage({
   reportText, setReportText,
   modality, setModality,
   mandatorySections, setMandatorySections,
-  onStartAudit, isLoading
+  onStartAudit, isLoading,
+  onBackToWelcome
 }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileSize, setFileSize] = useState(null);
@@ -98,6 +99,40 @@ export default function UploadPage({
       
       {/* Header */}
       <div>
+        {onBackToWelcome && (
+          <button
+            onClick={onBackToWelcome}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              fontSize: '11.5px',
+              borderRadius: '20px',
+              background: '#FFFFFF',
+              cursor: 'pointer',
+              border: '1px solid #CBD5E1',
+              color: '#1977CC',
+              fontWeight: 700,
+              marginBottom: '14px',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.04)',
+              transition: 'all 0.2s ease',
+              fontFamily: "'Poppins', sans-serif"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#EBF5FF';
+              e.currentTarget.style.borderColor = '#1977CC';
+              e.currentTarget.style.transform = 'translateX(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#FFFFFF';
+              e.currentTarget.style.borderColor = '#CBD5E1';
+              e.currentTarget.style.transform = 'translateX(0)';
+            }}
+          >
+            <ArrowLeft size={13} /> Back to Welcome
+          </button>
+        )}
         <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
           Upload Radiology Report for Clinical Audit
         </h1>
