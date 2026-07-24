@@ -1,6 +1,6 @@
 /**
  * Client-side Direct AI Audit Engine (Groq / Gemini API)
- * Features multi-model fallback and standard ACR audit schema normalization.
+ * Standardizes AI suggestions, remarks, scope of correction, and original report context.
  */
 
 export async function directGroqAudit({ report_text, modality, mandatory_sections, provider = 'groq', api_key = '' }) {
@@ -20,9 +20,11 @@ Required JSON Output Schema:
     {
       "category": "Missing Information" | "Clinical Alignment" | "Medical Terminology" | "Formatting",
       "severity": "High" | "Medium" | "Low",
+      "scope_of_correction": "Add Missing Section" | "Terminology Revision" | "Laterality Correction" | "Format Standardization",
       "finding": "Specific quality defect identified in report",
-      "original": "Original text snippet or N/A",
-      "recommended": "Exact recommended correction",
+      "original": "Exact text snippet from original report or N/A if missing",
+      "recommended": "Exact recommended correction text to use in final report",
+      "remarks": "Senior QA Officer observation notes and audit remarks",
       "rationale": "Detailed explanation of clinical impact and why this change is necessary"
     }
   ],
@@ -39,6 +41,8 @@ Required JSON Output Schema:
       "points": -10,
       "section": "Findings",
       "reason": "Missing findings section",
+      "scope_of_correction": "Add Missing Section",
+      "remarks": "Critical failure: Primary anatomical observation record is absent.",
       "clinical_impact": "High risk of missing secondary pathologies",
       "suggested_improvement": "Add comprehensive anatomical findings"
     }
@@ -103,7 +107,6 @@ ${report_text}
         const rawContent = data.choices[0]?.message?.content || '{}';
         const parsed = JSON.parse(rawContent);
 
-        // Normalize response to ensure UI compatibility
         return normalizeAuditResult(parsed, modality, report_text);
       } catch (err) {
         lastError = err.message;
@@ -132,9 +135,11 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
       suggestions = parsed.suggested_improvements.map((item) => ({
         category: item.category || 'General QA',
         severity: item.severity || 'Medium',
+        scope_of_correction: item.scope_of_correction || 'Content Revision',
         finding: item.text || item.finding || 'Clinical report improvement',
         original: item.original || 'N/A',
         recommended: item.recommended || item.text || 'Follow ACR practice guidelines',
+        remarks: item.remarks || 'Senior QA review note: Verify alignment with clinical indications.',
         rationale: item.rationale || item.explanation || 'Improves report clarity and diagnostic accuracy.'
       }));
     } else {
@@ -142,41 +147,70 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
         {
           category: 'Clinical Completeness',
           severity: quality_score < 70 ? 'High' : 'Medium',
+          scope_of_correction: 'Section Structuring',
           finding: 'Review report sections for complete ACR compliance',
-          original: 'N/A',
+          original: originalReportText ? originalReportText.substring(0, 100) + '...' : 'N/A',
           recommended: 'Ensure Demographics, History, Technique, Findings, and Impression are present.',
+          remarks: 'Ensure all mandatory clinical sections are explicitly labeled.',
           rationale: 'Complete structuring prevents clinical misinterpretation.'
         }
       ];
     }
+  } else {
+    // Ensure every suggestion has scope_of_correction & remarks
+    suggestions = suggestions.map((s) => ({
+      category: s.category || 'Clinical QA',
+      severity: s.severity || 'Medium',
+      scope_of_correction: s.scope_of_correction || (s.category?.includes('Missing') ? 'Add Missing Section' : 'Wording & Style Revision'),
+      finding: s.finding || 'Quality improvement recommendation',
+      original: s.original || 'N/A',
+      recommended: s.recommended || 'Follow ACR standard guidelines',
+      remarks: s.remarks || `Senior QA Officer Observation: Address ${s.category || 'QA findings'} prior to final sign-off.`,
+      rationale: s.rationale || 'Enhances clinical record accuracy and risk management.'
+    }));
   }
 
   // Normalize highlights
   const highlights = Array.isArray(parsed.highlights) ? parsed.highlights : [];
 
   // Normalize deductions log
-  const deductions_log = Array.isArray(parsed.deductions_log) ? parsed.deductions_log : [];
+  let deductions_log = parsed.deductions_log;
+  if (!Array.isArray(deductions_log) || deductions_log.length === 0) {
+    deductions_log = suggestions.map((s, idx) => ({
+      points: s.severity === 'High' ? -15 : s.severity === 'Medium' ? -10 : -5,
+      section: s.category || 'General QA',
+      reason: s.finding,
+      scope_of_correction: s.scope_of_correction,
+      remarks: s.remarks,
+      clinical_impact: s.rationale,
+      suggested_improvement: s.recommended
+    }));
+  } else {
+    deductions_log = deductions_log.map((d) => ({
+      points: d.points || -5,
+      section: d.section || 'General QA',
+      reason: d.reason || 'Omission or formatting defect',
+      scope_of_correction: d.scope_of_correction || (d.points < -10 ? 'Major Section Revision' : 'Minor Adjustment'),
+      remarks: d.remarks || `QA Note: ${d.reason}. Requires clinical correction.`,
+      clinical_impact: d.clinical_impact || 'Impacts documentation quality.',
+      suggested_improvement: d.suggested_improvement || 'Correct report section.'
+    }));
+  }
 
   // Normalize sections
   let sections = parsed.sections;
   if (!Array.isArray(sections)) {
-    if (Array.isArray(parsed.section_checklist)) {
-      sections = parsed.section_checklist.map((s) => ({ name: s.name, present: Boolean(s.present) }));
-    } else {
-      sections = [
-        { name: 'Patient Demographics', present: true },
-        { name: 'Clinical History / Indication', present: true },
-        { name: 'Procedure Details', present: true },
-        { name: 'Findings', present: true },
-        { name: 'Impression / Conclusion', present: true }
-      ];
-    }
+    sections = [
+      { name: 'Patient Demographics', present: true },
+      { name: 'Clinical History / Indication', present: true },
+      { name: 'Procedure Details', present: true },
+      { name: 'Findings', present: true },
+      { name: 'Impression / Conclusion', present: true }
+    ];
   }
 
-  // Normalize AI corrected report
   const ai_corrected_report = parsed.ai_corrected_report ?? parsed.revised_report ?? originalReportText;
 
-  // Build standard dimensions array for Quality Dashboard
   const dimensions = parsed.dimensions || [
     { id: 'patient_demographics', name: 'Patient Demographics', weight: '10%', score: 10, max_marks: 10, details: ['Present'] },
     { id: 'clinical_history', name: 'Clinical History / Indication', weight: '10%', score: 10, max_marks: 10, details: ['Present'] },

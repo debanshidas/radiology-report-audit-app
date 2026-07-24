@@ -192,6 +192,8 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                   <tr>
                     <th>Deduction</th>
                     <th>Deficiency Reason</th>
+                    <th>Scope of Correction</th>
+                    <th>QA Officer Remarks</th>
                     <th>Clinical Impact</th>
                     <th>Suggested Fix</th>
                   </tr>
@@ -201,6 +203,14 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                     <tr key={i}>
                       <td style={{ fontWeight: 900, color: '#DC2626', fontSize: '13px' }}>{ded.points} pts</td>
                       <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{ded.reason}</td>
+                      <td>
+                        <span style={{ fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '4px', background: '#FEE2E2', color: '#991B1B', border: '1px solid #FCA5A5' }}>
+                          {ded.scope_of_correction || 'Content Revision'}
+                        </span>
+                      </td>
+                      <td style={{ color: 'var(--text-primary)', fontSize: '11.5px', fontStyle: 'italic' }}>
+                        {ded.remarks || `QA Note: ${ded.reason}`}
+                      </td>
                       <td style={{ color: 'var(--text-secondary)', fontSize: '11.5px' }}>{ded.clinical_impact}</td>
                       <td style={{ color: '#16A34A', fontWeight: 600, fontSize: '11.5px' }}>{ded.suggested_improvement}</td>
                     </tr>
