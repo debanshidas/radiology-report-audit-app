@@ -348,10 +348,10 @@ export default function UploadPage({
 
       </div>
 
-      {/* 50-Case Enterprise Demo Library Modal */}
       <DemoLibraryModal
         isOpen={isDemoModalOpen}
         onClose={() => setIsDemoModalOpen(false)}
+        onSelectReport={handleSelectDemoCase}
         onSelectDemo={handleSelectDemoCase}
       />
 

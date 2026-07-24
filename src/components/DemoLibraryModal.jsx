@@ -2,7 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { Search, Filter, Shuffle, FileText, CheckCircle2, AlertTriangle, XCircle, Eye, X, Sparkles, BookOpen } from 'lucide-react';
 import { DEMO_REPORTS } from '../data/demoReports';
 
-export default function DemoLibraryModal({ isOpen, onClose, onSelectReport }) {
+export default function DemoLibraryModal({ isOpen, onClose, onSelectReport, onSelectDemo }) {
+  const handleSelect = (rep) => {
+    if (typeof onSelectReport === 'function') onSelectReport(rep);
+    if (typeof onSelectDemo === 'function') onSelectDemo(rep);
+    onClose();
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedQuality, setSelectedQuality] = useState('All');
@@ -276,7 +281,7 @@ export default function DemoLibraryModal({ isOpen, onClose, onSelectReport }) {
                       <Eye size={14} /> Preview
                     </button>
                     <button
-                      onClick={() => { onSelectReport(rep); onClose(); }}
+                      onClick={() => handleSelect(rep)}
                       style={{
                         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                         padding: '8px 12px', borderRadius: '8px', background: 'var(--accent)',
@@ -340,7 +345,7 @@ export default function DemoLibraryModal({ isOpen, onClose, onSelectReport }) {
                 Close Preview
               </button>
               <button
-                onClick={() => { onSelectReport(previewReport); setPreviewReport(null); onClose(); }}
+                onClick={() => { handleSelect(previewReport); setPreviewReport(null); }}
                 style={{
                   padding: '8px 20px', borderRadius: '8px', background: 'var(--accent)',
                   border: 'none', color: '#ffffff', fontSize: '13px', fontWeight: 700, cursor: 'pointer'
