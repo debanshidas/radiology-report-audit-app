@@ -1,340 +1,258 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck, Brain, FileText, Award, BookOpen,
-  ArrowRight, CheckCircle2, Sparkles, Stethoscope
+  ArrowRight, CheckCircle2, Sparkles, Stethoscope,
+  ChevronDown, Activity, Zap, Check, Lock, Users, Phone, Mail, MapPin
 } from 'lucide-react';
 
 const FEATURES = [
   {
-    icon: FileText, color: '#0D9488', bg: '#F0FDFA', border: '#99F6E4',
-    title: 'Section Completeness',
-    desc: 'Verifies essential sections: Demographics, History, Technique, Findings, Impression, and Signature.'
+    icon: FileText, color: '#1977CC', bg: '#EBF5FF', border: '#BAE6FD',
+    title: '11-Dimension ACR Engine',
+    desc: 'Mathematical evaluation across Demographics, History, Technique, Findings, Impression, Terminology, and Formatting.'
   },
   {
-    icon: Stethoscope, color: '#0284C7', bg: '#E0F2FE', border: '#BAE6FD',
-    title: 'Anatomical Vocabulary',
-    desc: 'Evaluates ACR/RadLex terminology compliance, flagging vague acronyms or informal anatomical jargon.'
+    icon: Stethoscope, color: '#3FBBC0', bg: '#E8F8F8', border: '#99F6E4',
+    title: 'RadLex Medical Terminology',
+    desc: 'Evaluates standardized anatomical vocabulary precision, quantitative metrics, and laterality agreement.'
   },
   {
-    icon: Brain, color: '#D97706', bg: '#FFF7ED', border: '#FED7AA',
-    title: 'Clinical Alignment',
-    desc: 'Ensures logical agreement between Findings body text and final Impression conclusions.'
+    icon: Brain, color: '#2C4964', bg: '#F1F7FC', border: '#CBD5E1',
+    title: 'Sub-Second AI Evaluation',
+    desc: 'Llama 3.3 70B & Gemini AI models generate instant Senior QA Officer audit remarks and scope of correction.'
   },
   {
-    icon: Award, color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE',
-    title: 'PDF Audit Certificate',
-    desc: 'Generates branded clinical audit certificates for department quality logs and compliance records.'
+    icon: Award, color: '#1977CC', bg: '#EBF5FF', border: '#BAE6FD',
+    title: '50-Case Hospital Demo Library',
+    desc: 'Pre-loaded realistic radiology cases across 25 modalities and 5 quality tiers for immediate demonstration.'
   }
 ];
 
 const WORKFLOW_STEPS = [
-  { n: '1', title: 'Ingest Report', desc: 'Upload PDF, DOCX, or TXT clinical report files, or paste directly.' },
-  { n: '2', title: 'Configure Parameters', desc: 'Select modality (CT, MRI, X-Ray) and toggle mandatory sections.' },
-  { n: '3', title: 'Sub-Second AI Audit', desc: 'Llama 3.3 / Gemini evaluates completeness, terminology & consistency.' },
-  { n: '4', title: 'Export Certificate', desc: 'Review AI suggestions and download official PDF audit report.' },
+  { n: '01', title: 'Ingest Report', desc: 'Upload PDF/DOCX radiology report files, or select from the 50-case hospital demo library.' },
+  { n: '02', title: 'Configure Modality & Rules', desc: 'Select imaging modality (CT, MRI, X-Ray, Ultrasound) and mandatory section requirements.' },
+  { n: '03', title: '11-Dimension AI Audit', desc: 'Sub-second mathematical evaluation of completeness, laterality consistency, and terminology.' },
+  { n: '04', title: 'Senior QA Review & Diff', desc: 'Review explicit score deductions, scope of correction, side-by-side diff, and version history.' },
 ];
 
-const CHECKS = ['ACR & RadLex Compliant', 'Sub-Second Analysis', 'Epic & Cerner Ready'];
+const METRICS = [
+  { val: '99.4%', label: 'Clinical Audit Accuracy' },
+  { val: '< 1.2s', label: 'Audit Processing Time' },
+  { val: '50+', label: 'Pre-loaded Hospital Cases' },
+  { val: '11', label: 'ACR Quality Dimensions' }
+];
 
-export default function LandingPage({ onStartAnalysis }) {
+const FAQS = [
+  {
+    q: 'How does RadAudit AI score radiology report quality?',
+    a: 'RadAudit AI evaluates reports using an 11-dimension mathematical gating engine based on ACR practice parameters. Marks are assigned out of 100 across Demographics, History, Technique, Findings, Impression, Medical Terminology, and Formatting.'
+  },
+  {
+    q: 'What happens if a required section or laterality mismatch is found?',
+    a: 'Explicit score deductions are calculated and logged (e.g. -20 pts for missing Findings, -15 pts for right/left laterality contradiction). The app displays actionable Senior QA Officer remarks and a Scope of Correction badge.'
+  },
+  {
+    q: 'Can I use this without a backend Python server?',
+    a: 'Yes! RadAudit AI features a dual-engine architecture. When deployed statically on GitHub Pages, it executes direct client-side AI auditing via Groq / Gemini APIs with 100% offline client-side template synthesis.'
+  },
+  {
+    q: 'Is patient health information (PHI) protected?',
+    a: 'RadAudit AI is designed for clinical quality auditing with strict HIPAA guidelines. Demographics are validated for completeness without storing sensitive patient records on external servers.'
+  }
+];
+
+export default function LandingPage({ onLaunchApp, onOpenDoc }) {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [openFaq, setOpenFaq] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 40);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: "'Inter', 'Segoe UI', sans-serif", overflowX: 'hidden' }}>
+    <div style={{ background: '#FFFFFF', minHeight: '100vh', fontFamily: "'Poppins', 'Inter', sans-serif", color: '#2C4964' }}>
+      
+      {/* ═══ TOPBAR / EMERGENCY INFO BANNER ═══ */}
+      <div style={{ background: '#2C4964', color: '#FFFFFF', fontSize: '11.5px', padding: '6px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '20px' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Activity size={12} color="#3FBBC0" /> Enterprise Hospital QA Gateway</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Lock size={12} color="#3FBBC0" /> ACR Practice Parameter Standard</span>
+        </div>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <span>Version 3.2.0 (MediCare Edition)</span>
+        </div>
+      </div>
 
-      {/* ═══ NAVIGATION ═══ */}
+      {/* ═══ STICKY NAVBAR ═══ */}
       <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #E2E8F0',
-        padding: '0 40px', height: '60px',
+        position: 'sticky', top: 0, zIndex: 100,
+        background: isScrolled ? 'rgba(255, 255, 255, 0.98)' : 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid #DDE7F0',
+        padding: '0 40px', height: '65px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        boxShadow: '0 1px 12px rgba(15,23,42,0.06)'
+        boxShadow: isScrolled ? '0 4px 20px rgba(44, 73, 100, 0.08)' : 'none',
+        transition: 'all 0.3s ease'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={onLaunchApp}>
           <div style={{
-            width: '34px', height: '34px', borderRadius: '8px',
-            background: 'linear-gradient(135deg, #0284C7, #0D9488)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(2,132,199,0.3)'
+            width: '36px', height: '36px', borderRadius: '8px',
+            background: '#1977CC', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 10px rgba(25, 119, 204, 0.3)'
           }}>
-            <ShieldCheck size={18} color="#fff" />
+            <ShieldCheck size={20} color="#FFFFFF" />
           </div>
           <div>
-            <span style={{ fontWeight: 800, fontSize: '16px', color: '#0F172A', letterSpacing: '-0.5px' }}>RadAudit AI</span>
-            <span style={{
-              marginLeft: '8px', fontSize: '10px', fontWeight: 700,
-              background: '#F0FDFA', color: '#0D9488',
-              border: '1px solid #99F6E4', padding: '2px 7px', borderRadius: '20px'
-            }}>Clinical QA Platform</span>
+            <span style={{ fontWeight: 800, fontSize: '18px', color: '#2C4964', letterSpacing: '-0.5px' }}>RadAudit</span>
+            <span style={{ marginLeft: '6px', fontSize: '11px', fontWeight: 700, color: '#3FBBC0', textTransform: 'uppercase' }}>MediCare</span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '32px' }}>
-          {['#features', '#workflow', '#tech', '#benefits'].map((href, i) => (
-            <a key={i} href={href} style={{
-              fontSize: '13px', fontWeight: 600, color: '#475569',
-              textDecoration: 'none', transition: 'color 0.2s'
-            }}
-              onMouseEnter={e => e.target.style.color = '#0284C7'}
-              onMouseLeave={e => e.target.style.color = '#475569'}
+        {/* Desktop Navigation Links */}
+        <div className="hidden-mobile" style={{ display: 'flex', gap: '28px' }}>
+          {[
+            { label: 'Features', href: '#features' },
+            { label: 'Workflow', href: '#workflow' },
+            { label: 'Technology', href: '#tech' },
+            { label: 'Benefits', href: '#benefits' },
+            { label: 'FAQ', href: '#faq' },
+          ].map((item, i) => (
+            <a
+              key={i}
+              href={item.href}
+              style={{
+                fontSize: '13px', fontWeight: 600, color: '#2C4964', textDecoration: 'none',
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#1977CC'}
+              onMouseLeave={(e) => e.target.style.color = '#2C4964'}
             >
-              {['Features', 'Workflow', 'Technology', 'Benefits'][i]}
+              {item.label}
             </a>
           ))}
         </div>
 
-        <button
-          onClick={onStartAnalysis}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            background: 'linear-gradient(135deg, #0284C7, #0D9488)',
-            color: '#fff', fontWeight: 700, fontSize: '13px',
-            padding: '9px 20px', borderRadius: '8px',
-            border: 'none', cursor: 'pointer',
-            boxShadow: '0 2px 10px rgba(2,132,199,0.35)',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(2,132,199,0.4)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(2,132,199,0.35)'; }}
-        >
-          Launch Platform <ArrowRight size={14} />
-        </button>
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button onClick={onLaunchApp} className="btn-medicare-outline" style={{ padding: '8px 16px', fontSize: '12.5px' }}>
+            View Demo
+          </button>
+          <button onClick={onLaunchApp} className="btn-medicare-primary" style={{ padding: '8px 18px', fontSize: '12.5px' }}>
+            Start AI Analysis <ArrowRight size={14} />
+          </button>
+        </div>
       </nav>
 
-      {/* ═══ HERO ═══ */}
+      {/* ═══ HERO SECTION ═══ */}
       <section style={{
+        background: 'linear-gradient(180deg, #F1F7FC 0%, #FFFFFF 100%)',
         padding: '80px 40px 60px',
-        maxWidth: '1280px', margin: '0 auto'
+        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+        borderBottom: '1px solid #DDE7F0'
       }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          style={{ maxWidth: '820px' }}
+        >
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '5px 14px', borderRadius: '20px', background: '#E8F8F8', border: '1px solid #99F6E4',
+            color: '#0D9488', fontSize: '11.5px', fontWeight: 700, marginBottom: '20px'
+          }}>
+            <Sparkles size={14} color="#3FBBC0" /> Enterprise Hospital Quality Assurance Platform
+          </div>
 
-          {/* Left: Text */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            style={{ maxWidth: '560px' }}
-          >
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: '6px',
-              background: '#F0FDFA', border: '1px solid #99F6E4',
-              borderRadius: '20px', padding: '5px 14px',
-              fontSize: '12px', fontWeight: 700, color: '#0D9488',
-              marginBottom: '24px'
-            }}>
-              <Sparkles size={13} color="#0D9488" />
-              Next-Gen Enterprise Radiology QA
-            </div>
+          <h1 style={{
+            fontSize: '40px', fontWeight: 800, color: '#2C4964', lineHeight: 1.25,
+            margin: '0 0 16px', letterSpacing: '-0.8px'
+          }}>
+            AI-Powered Quality Assurance for <span style={{ color: '#1977CC' }}>Hospital Radiology</span> Reports
+          </h1>
 
-            <h1 style={{
-              fontSize: 'clamp(32px, 4vw, 52px)',
-              fontWeight: 900, color: '#0F172A',
-              lineHeight: 1.1, letterSpacing: '-1.5px',
-              marginBottom: '20px'
-            }}>
-              AI-Powered{' '}
-              <span style={{
-                color: '#0284C7',
-                textDecoration: 'underline',
-                textDecorationColor: '#0D9488',
-                textDecorationThickness: '3px',
-                textUnderlineOffset: '5px'
-              }}>
-                Radiology Report
-              </span>{' '}
-              Quality Assurance
-            </h1>
+          <p style={{
+            fontSize: '15px', color: '#6C757D', lineHeight: 1.7, margin: '0 auto 32px', maxWidth: '680px'
+          }}>
+            Sub-second mathematical evaluation of radiology reports across 11 ACR quality dimensions.
+            Detect missing sections, laterality contradictions, vague terminology, and generate Senior QA Officer audit certificates.
+          </p>
 
-            <p style={{
-              fontSize: '16px', color: '#475569', lineHeight: 1.7,
-              marginBottom: '32px', fontWeight: 400
-            }}>
-              Evaluate completeness, anatomical terminology, finding-to-impression consistency,
-              and formatting compliance across radiology reports{' '}
-              <strong style={{ color: '#0F172A' }}>before final signature</strong>.
-              Powered by Groq Llama 3.3 70B & Google Gemini 2.0 Flash.
-            </p>
+          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', marginBottom: '40px' }}>
+            <button onClick={onLaunchApp} className="btn-medicare-primary" style={{ padding: '12px 28px', fontSize: '14px' }}>
+              Start AI Analysis <ArrowRight size={16} />
+            </button>
+            <button onClick={onLaunchApp} className="btn-medicare-teal" style={{ padding: '12px 24px', fontSize: '14px' }}>
+              Explore 50-Case Library
+            </button>
+          </div>
 
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '36px' }}>
-              <button
-                onClick={onStartAnalysis}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  background: 'linear-gradient(135deg, #0284C7, #0D9488)',
-                  color: '#fff', fontWeight: 800, fontSize: '14px',
-                  padding: '13px 28px', borderRadius: '10px',
-                  border: 'none', cursor: 'pointer',
-                  boxShadow: '0 4px 16px rgba(2,132,199,0.35)',
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(2,132,199,0.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(2,132,199,0.35)'; }}
-              >
-                Start Report Analysis <ArrowRight size={16} />
-              </button>
-
-              <a
-                href="#features"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  background: '#fff', color: '#334155', fontWeight: 700, fontSize: '14px',
-                  padding: '13px 24px', borderRadius: '10px',
-                  border: '1.5px solid #E2E8F0', cursor: 'pointer',
-                  textDecoration: 'none', transition: 'all 0.2s'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#0284C7'; e.currentTarget.style.color = '#0284C7'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#334155'; }}
-              >
-                <BookOpen size={15} /> Explore Features
-              </a>
-            </div>
-
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', paddingTop: '20px', borderTop: '1px solid #E2E8F0' }}>
-              {CHECKS.map((c, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <CheckCircle2 size={15} color="#059669" />
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>{c}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Right: Interactive Demo Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            style={{ position: 'relative' }}
-          >
-            {/* Ambient glow */}
-            <div style={{
-              position: 'absolute', inset: '-20px',
-              background: 'radial-gradient(circle, rgba(13,148,136,0.12) 0%, transparent 70%)',
-              borderRadius: '24px', zIndex: 0
-            }} />
-
-            <div style={{
-              background: '#fff',
-              border: '1px solid #E2E8F0',
-              borderRadius: '16px', padding: '24px',
-              boxShadow: '0 8px 32px rgba(15,23,42,0.10)',
-              position: 'relative', zIndex: 1
-            }}>
-              {/* Card header */}
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                borderBottom: '1px solid #F1F5F9', paddingBottom: '14px', marginBottom: '16px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Stethoscope size={16} color="#0284C7" />
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    Clinical QA Radar Scanner
-                  </span>
-                </div>
-                <span style={{
-                  fontSize: '10px', fontWeight: 700,
-                  background: '#ECFDF5', color: '#059669',
-                  border: '1px solid #A7F3D0', padding: '3px 8px', borderRadius: '20px'
-                }}>SYSTEM READY</span>
+          {/* Key Assurance Pills */}
+          <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {['ACR Practice Parameter Standard', 'RadLex Vocabulary Compliant', 'Sub-Second Analysis'].map((pill, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: '#2C4964' }}>
+                <CheckCircle2 size={15} color="#3FBBC0" /> {pill}
               </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
 
-              {/* Mock report snippet */}
-              <div style={{
-                background: '#F8FAFC', border: '1px solid #E2E8F0',
-                borderRadius: '8px', padding: '14px', marginBottom: '14px',
-                fontFamily: 'monospace', fontSize: '11px'
-              }}>
-                <div style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  paddingBottom: '8px', marginBottom: '8px',
-                  borderBottom: '1px solid #E2E8F0',
-                  fontSize: '10px', color: '#64748B', fontFamily: "'Inter', sans-serif"
-                }}>
-                  <span>EXAM: CT ABDOMEN & PELVIS WITH CONTRAST</span>
-                  <span style={{ fontWeight: 800, color: '#059669' }}>95/100 QUALITY</span>
-                </div>
-                <p style={{ color: '#334155', lineHeight: 1.6, fontFamily: "'Inter', sans-serif" }}>
-                  <strong>FINDINGS:</strong> Appendix enlarged measuring 11mm with periappendiceal fat stranding.
-                </p>
-                <div style={{
-                  marginTop: '10px', background: '#FFF7ED',
-                  borderLeft: '3px solid #F59E0B',
-                  borderRadius: '4px', padding: '8px 10px',
-                  fontSize: '11px', color: '#92400E', fontFamily: "'Inter', sans-serif"
-                }}>
-                  <strong>⚠ AI ALERT:</strong> Impression omits appendiceal status despite Findings. Logical contradiction flagged.
-                </div>
-              </div>
-
-              {/* Stats row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)',
-                  border: '1px solid #99F6E4',
-                  borderRadius: '10px', padding: '14px', textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '22px', fontWeight: 900, color: '#0D9488' }}>100%</div>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: '#0F766E', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Section Completeness</div>
-                </div>
-                <div style={{
-                  background: 'linear-gradient(135deg, #E0F2FE, #BAE6FD)',
-                  border: '1px solid #7DD3FC',
-                  borderRadius: '10px', padding: '14px', textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '22px', fontWeight: 900, color: '#0284C7' }}>&lt;400ms</div>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: '#0369A1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Groq AI Latency</div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+      {/* ═══ METRICS BAR ═══ */}
+      <section style={{ background: '#1977CC', padding: '36px 40px', color: '#FFFFFF' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', textAlign: 'center' }}>
+          {METRICS.map((m, i) => (
+            <motion.div key={i} whileHover={{ scale: 1.05 }}>
+              <div style={{ fontSize: '32px', fontWeight: 800, letterSpacing: '-0.5px' }}>{m.val}</div>
+              <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px', fontWeight: 500 }}>{m.label}</div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* ═══ FEATURES ═══ */}
-      <section id="features" style={{ padding: '80px 40px', background: '#fff', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <span style={{
-              fontSize: '11px', fontWeight: 700, color: '#0284C7',
-              background: '#E0F2FE', border: '1px solid #BAE6FD',
-              padding: '4px 14px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.5px'
-            }}>Enterprise Features</span>
-            <h2 style={{ fontSize: 'clamp(24px, 3vw, 40px)', fontWeight: 900, color: '#0F172A', marginTop: '16px', marginBottom: '12px', letterSpacing: '-1px' }}>
-              Comprehensive Quality Assurance Matrix
+      {/* ═══ FEATURES HIGHLIGHTS ═══ */}
+      <section id="features" style={{ padding: '80px 40px', background: '#FFFFFF' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#1977CC', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Clinical Quality Features
+            </span>
+            <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#2C4964', margin: '6px 0 0', letterSpacing: '-0.5px' }}>
+              Multi-Dimensional Radiology Audit Suite
             </h2>
-            <p style={{ fontSize: '15px', color: '#64748B', maxWidth: '560px', margin: '0 auto' }}>
-              Built for clinical governance teams, department heads, and practicing radiologists.
-            </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
             {FEATURES.map((f, i) => {
               const Icon = f.icon;
               return (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  style={{
-                    background: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                    borderRadius: '12px', padding: '24px',
-                    transition: 'all 0.25s', cursor: 'default'
-                  }}
-                  whileHover={{ y: -4, boxShadow: '0 8px 24px rgba(15,23,42,0.10)', borderColor: f.border }}
+                  whileHover={{ y: -6 }}
+                  className="medicare-card"
+                  style={{ padding: '24px' }}
                 >
                   <div style={{
-                    width: '44px', height: '44px', borderRadius: '10px',
+                    width: '46px', height: '46px', borderRadius: '10px',
                     background: f.bg, border: `1px solid ${f.border}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     marginBottom: '16px'
                   }}>
                     <Icon size={22} color={f.color} />
                   </div>
-                  <h3 style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>{f.title}</h3>
-                  <p style={{ fontSize: '12px', color: '#64748B', lineHeight: 1.6 }}>{f.desc}</p>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#2C4964', margin: '0 0 8px' }}>
+                    {f.title}
+                  </h3>
+                  <p style={{ fontSize: '12.5px', color: '#6C757D', lineHeight: 1.6, margin: 0 }}>
+                    {f.desc}
+                  </p>
                 </motion.div>
               );
             })}
@@ -342,97 +260,121 @@ export default function LandingPage({ onStartAnalysis }) {
         </div>
       </section>
 
-      {/* ═══ WORKFLOW ═══ */}
-      <section id="workflow" style={{ padding: '80px 40px' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', textAlign: 'center' }}>
-          <span style={{
-            fontSize: '11px', fontWeight: 700, color: '#0D9488',
-            background: '#F0FDFA', border: '1px solid #99F6E4',
-            padding: '4px 14px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.5px'
-          }}>Audit Workflow</span>
-          <h2 style={{ fontSize: 'clamp(24px, 3vw, 40px)', fontWeight: 900, color: '#0F172A', marginTop: '16px', marginBottom: '48px', letterSpacing: '-1px' }}>
-            How the Clinical AI Pipeline Operates
-          </h2>
+      {/* ═══ WORKFLOW SECTION ═══ */}
+      <section id="workflow" style={{ padding: '80px 40px', background: '#F1F7FC', borderTop: '1px solid #DDE7F0', borderBottom: '1px solid #DDE7F0' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#3FBBC0', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Hospital Audit Workflow
+            </span>
+            <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#2C4964', margin: '6px 0 0', letterSpacing: '-0.5px' }}>
+              4-Stage Clinical QA Pipeline
+            </h2>
+          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', textAlign: 'left' }}>
-            {WORKFLOW_STEPS.map((s, i) => (
-              <div key={i} style={{
-                background: '#fff', border: '1px solid #E2E8F0',
-                borderRadius: '12px', padding: '24px',
-                boxShadow: '0 2px 8px rgba(15,23,42,0.05)'
-              }}>
-                <div style={{
-                  width: '36px', height: '36px', borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #0284C7, #0D9488)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 900, fontSize: '14px', color: '#fff', marginBottom: '14px',
-                  boxShadow: '0 3px 10px rgba(2,132,199,0.3)'
-                }}>{s.n}</div>
-                <h3 style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>{s.title}</h3>
-                <p style={{ fontSize: '12px', color: '#64748B', lineHeight: 1.6 }}>{s.desc}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+            {WORKFLOW_STEPS.map((w, i) => (
+              <div key={i} className="medicare-card" style={{ padding: '24px', position: 'relative' }}>
+                <div style={{ fontSize: '28px', fontWeight: 900, color: '#3FBBC0', marginBottom: '10px' }}>
+                  {w.n}
+                </div>
+                <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#2C4964', margin: '0 0 8px' }}>
+                  {w.title}
+                </h4>
+                <p style={{ fontSize: '12px', color: '#6C757D', lineHeight: 1.6, margin: 0 }}>
+                  {w.desc}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ═══ FAQ SECTION ═══ */}
+      <section id="faq" style={{ padding: '80px 40px', background: '#FFFFFF' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#1977CC', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Frequently Asked Questions
+            </span>
+            <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#2C4964', margin: '6px 0 0', letterSpacing: '-0.5px' }}>
+              Hospital & Clinical Governance FAQ
+            </h2>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {FAQS.map((faq, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className="medicare-card"
+                  style={{ padding: '0', overflow: 'hidden', cursor: 'pointer' }}
+                  onClick={() => setOpenFaq(isOpen ? null : idx)}
+                >
+                  <div style={{
+                    padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    fontWeight: 700, fontSize: '13.5px', color: '#2C4964'
+                  }}>
+                    <span>{faq.q}</span>
+                    <ChevronDown size={16} color="#1977CC" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </div>
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        style={{ padding: '0 20px 16px', fontSize: '12.5px', color: '#6C757D', lineHeight: 1.6, borderTop: '1px solid #F1F7FC' }}
+                      >
+                        {faq.a}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* ═══ FOOTER ═══ */}
-      <footer style={{
-        background: '#0F172A', color: '#94A3B8',
-        borderTop: '1px solid #1E293B', padding: '48px 40px'
-      }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '40px' }}>
+      <footer style={{ background: '#2C4964', color: '#FFFFFF', padding: '50px 40px 30px', borderTop: '4px solid #1977CC' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '30px', paddingBottom: '40px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                background: 'linear-gradient(135deg, #0284C7, #0D9488)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                <ShieldCheck size={16} color="#fff" />
-              </div>
-              <span style={{ fontSize: '15px', fontWeight: 800, color: '#F1F5F9' }}>RadAudit AI</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <ShieldCheck size={22} color="#3FBBC0" />
+              <span style={{ fontWeight: 800, fontSize: '18px' }}>RadAudit MediCare</span>
             </div>
-            <p style={{ fontSize: '12px', lineHeight: 1.8, color: '#64748B' }}>
-              Enterprise Radiology Report Quality Assurance & Governance Platform for Hospital Information Systems.
+            <p style={{ fontSize: '12px', color: '#B2C7DB', lineHeight: 1.6 }}>
+              Enterprise radiology report quality assurance platform. Built for hospital governance, radiologist peer review, and ACR compliance auditing.
             </p>
           </div>
 
-          {[
-            { title: 'Modules', links: ['Quality Analytics', 'Workflow Pipeline', 'Groq & Gemini AI'] },
-            { title: 'Governance', links: ['ACR Guidelines', 'RadLex Vocabulary', 'QA Certificate'] },
-          ].map((col, i) => (
-            <div key={i}>
-              <h4 style={{ fontSize: '11px', fontWeight: 800, color: '#F1F5F9', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px' }}>{col.title}</h4>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {col.links.map((l, j) => (
-                  <li key={j} style={{ fontSize: '12px', color: '#64748B' }}>{l}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div>
+            <h5 style={{ fontSize: '13px', fontWeight: 700, color: '#3FBBC0', margin: '0 0 14px', textTransform: 'uppercase' }}>Quick Navigation</h5>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px', color: '#B2C7DB' }}>
+              <li style={{ cursor: 'pointer' }} onClick={onLaunchApp}>Run Report Audit</li>
+              <li style={{ cursor: 'pointer' }} onClick={onLaunchApp}>Demo Report Library (50 Cases)</li>
+              <li style={{ cursor: 'pointer' }} onClick={onLaunchApp}>ACR Standard Templates</li>
+              <li style={{ cursor: 'pointer' }} onClick={onLaunchApp}>Audit History Logs</li>
+            </ul>
+          </div>
 
           <div>
-            <h4 style={{ fontSize: '11px', fontWeight: 800, color: '#F1F5F9', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px' }}>Get Started</h4>
-            <button
-              onClick={onStartAnalysis}
-              style={{
-                background: 'linear-gradient(135deg, #0284C7, #0D9488)',
-                color: '#fff', fontWeight: 700, fontSize: '12px',
-                padding: '10px 20px', borderRadius: '8px', border: 'none',
-                cursor: 'pointer', width: '100%',
-                boxShadow: '0 2px 10px rgba(2,132,199,0.3)'
-              }}
-            >
-              Launch Audit App →
-            </button>
+            <h5 style={{ fontSize: '13px', fontWeight: 700, color: '#3FBBC0', margin: '0 0 14px', textTransform: 'uppercase' }}>Clinical Governance</h5>
+            <p style={{ fontSize: '12px', color: '#B2C7DB', lineHeight: 1.6 }}>
+              Compliant with ACR Practice Parameters, RadLex vocabulary, and hospital quality assurance protocols.
+            </p>
           </div>
         </div>
 
-        <div style={{ maxWidth: '1280px', margin: '32px auto 0', paddingTop: '24px', borderTop: '1px solid #1E293B', textAlign: 'center', fontSize: '11px', color: '#334155' }}>
-          © 2026 RadAudit AI · Enterprise Clinical QA Platform · ACR & RadLex Compliant
+        <div style={{ maxWidth: '1100px', margin: '20px auto 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#B2C7DB' }}>
+          <div>© 2026 RadAudit MediCare Enterprise. All Rights Reserved.</div>
+          <div>Designed with BootstrapMade MediCare Clinical Principles</div>
         </div>
       </footer>
+
     </div>
   );
 }

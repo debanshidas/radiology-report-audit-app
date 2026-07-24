@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { History, Search, Filter, Download, Eye, Trash2, Calendar, FileText, CheckCircle2, AlertTriangle, XCircle, ArrowUpDown } from 'lucide-react';
+import { History, Search, Filter, Eye, Trash2, Calendar, FileText, CheckCircle2, AlertTriangle, XCircle, ArrowUpDown } from 'lucide-react';
 import AICautionNotice from '../components/AICautionNotice';
-import { apiFetch } from '../utils/apiClient';
-import { downloadPdfBlob } from '../utils/downloadHelper';
 
 export default function AnalysisHistoryPage({ historyItems, setHistoryItems, onSelectAudit, setActivePage }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,37 +37,10 @@ export default function AnalysisHistoryPage({ historyItems, setHistoryItems, onS
     localStorage.setItem('rad_audit_history', JSON.stringify(updated));
   };
 
-  const handleDownloadPDF = async (item) => {
-    try {
-      const resp = await apiFetch('/api/generate-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: item.report_title || 'radiology_report.txt',
-          modality: item.modality || 'Chest X-Ray',
-          audit_result: item.audit_result
-        })
-      });
-      if (resp.ok) {
-        const blob = await resp.blob();
-        const fn = `radiology_audit_${(item.modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-        downloadPdfBlob(blob, fn);
-        return;
-      }
-    } catch (e) {
-      // Server offline fallback
-    }
-
-    // Client-side PDF fallback for GitHub Pages
-    try {
-      await generateClientPdf({
-        audit_result: item.audit_result,
-        modality: item.modality || 'Chest X-Ray',
-        report_text: item.audit_result?.original_report_text || item.report_title,
-        filename: `radiology_audit_${(item.modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`
-      });
-    } catch (clientErr) {
-      alert('PDF Download Error: ' + clientErr.message);
+  const handleClearAll = () => {
+    if (window.confirm('Are you sure you want to clear all audit history records?')) {
+      setHistoryItems([]);
+      localStorage.removeItem('rad_audit_history');
     }
   };
 
@@ -77,135 +48,147 @@ export default function AnalysisHistoryPage({ historyItems, setHistoryItems, onS
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #DDE7F0', paddingBottom: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
-            Analysis History & Audit Repository
+          <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#2C4964', margin: 0, letterSpacing: '-0.3px' }}>
+            Radiology Audit History Logs
           </h1>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-            Historical log of clinical radiology QA evaluations, compliance audits, and exported records
+          <p style={{ fontSize: '12px', color: '#6C757D', margin: '3px 0 0' }}>
+            Central repository of evaluated radiology reports and departmental quality records ({historyItems.length} records)
           </p>
         </div>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
-          Total Archival Records: <strong style={{ color: 'var(--text-primary)' }}>{historyItems.length}</strong>
-        </span>
+        {historyItems.length > 0 && (
+          <button onClick={handleClearAll} className="btn-destructive">
+            <Trash2 size={13} /> Clear Log History
+          </button>
+        )}
       </div>
 
       <AICautionNotice />
 
-      {/* Search & Multi-Parametric Filter Toolbar */}
-      <div className="enterprise-card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '10px 14px' }}>
-        <div style={{ position: 'relative', width: '300px' }}>
-          <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+      {/* Filter & Search Bar */}
+      <div className="medicare-card" style={{ padding: '16px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Search Input */}
+        <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+          <Search size={15} color="#6C757D" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
-            placeholder="Search Audit ID, Patient, Modality, or keyword..."
+            placeholder="Search by accession ID, modality, or report text..."
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             style={{
-              width: '100%', padding: '6px 10px 6px 30px', borderRadius: '4px',
-              border: '1px solid var(--border)', fontSize: '12px',
-              background: 'var(--surface-muted)', color: 'var(--text-primary)', outline: 'none'
+              width: '100%', padding: '8px 12px 8px 34px', borderRadius: '6px',
+              border: '1px solid #CBD5E1', fontSize: '12.5px', color: '#2C4964', outline: 'none'
             }}
           />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <select
-            value={selectedModality}
-            onChange={e => setSelectedModality(e.target.value)}
-            style={{
-              padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--border)',
-              fontSize: '11.5px', fontWeight: 600, background: 'var(--surface-muted)', color: 'var(--text-primary)'
-            }}
-          >
-            <option value="All">All Modalities</option>
-            <option value="Chest X-Ray">Chest X-Ray</option>
-            <option value="Brain MRI">Brain MRI</option>
-            <option value="Abdomen CT">Abdomen CT</option>
-            <option value="Spine MRI">Spine MRI</option>
-            <option value="Ultrasound">Ultrasound</option>
-            <option value="Mammography">Mammography</option>
-          </select>
+        {/* Modality Filter */}
+        <select
+          value={selectedModality}
+          onChange={(e) => setSelectedModality(e.target.value)}
+          style={{
+            padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1',
+            fontSize: '12px', fontWeight: 600, color: '#2C4964', background: '#FFFFFF', outline: 'none'
+          }}
+        >
+          <option value="All">All Modalities</option>
+          {Array.from(new Set(historyItems.map(i => i.modality))).filter(Boolean).map(m => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
 
-          <select
-            value={selectedScoreFilter}
-            onChange={e => setSelectedScoreFilter(e.target.value)}
-            style={{
-              padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--border)',
-              fontSize: '11.5px', fontWeight: 600, background: 'var(--surface-muted)', color: 'var(--text-primary)'
-            }}
-          >
-            <option value="All">All Scores</option>
-            <option value="green">Compliant (≥90)</option>
-            <option value="amber">Minor Issues (70-89)</option>
-            <option value="red">Non-Compliant (&lt;70)</option>
-          </select>
+        {/* Score Filter */}
+        <select
+          value={selectedScoreFilter}
+          onChange={(e) => setSelectedScoreFilter(e.target.value)}
+          style={{
+            padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1',
+            fontSize: '12px', fontWeight: 600, color: '#2C4964', background: '#FFFFFF', outline: 'none'
+          }}
+        >
+          <option value="All">All Scores</option>
+          <option value="green">Compliant (90-100)</option>
+          <option value="amber">Needs Review (70-89)</option>
+          <option value="red">Critical Revision (&lt; 70)</option>
+        </select>
 
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-            style={{
-              padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--border)',
-              fontSize: '11.5px', fontWeight: 600, background: 'var(--surface-muted)', color: 'var(--text-primary)'
-            }}
-          >
-            <option value="newest">Sort: Newest First</option>
-            <option value="score_desc">Sort: Score High to Low</option>
-            <option value="score_asc">Sort: Score Low to High</option>
-          </select>
-        </div>
+        {/* Sort Order */}
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          style={{
+            padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1',
+            fontSize: '12px', fontWeight: 600, color: '#2C4964', background: '#FFFFFF', outline: 'none'
+          }}
+        >
+          <option value="newest">Sort: Newest First</option>
+          <option value="score_desc">Sort: Highest Score</option>
+          <option value="score_asc">Sort: Lowest Score</option>
+        </select>
       </div>
 
-      {/* History Data Table */}
-      <div className="enterprise-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <table className="enterprise-table">
-          <thead>
-            <tr>
-              <th>Audit Reference ID</th>
-              <th>Report Title / Modality</th>
-              <th>Audit Date</th>
-              <th>Quality Index</th>
-              <th>Status Grade</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredItems.length === 0 ? (
+      {/* History Items Table */}
+      {filteredItems.length === 0 ? (
+        <div className="medicare-card" style={{ padding: '36px', textAlign: 'center' }}>
+          <History size={32} color="#CBD5E1" style={{ marginBottom: '12px' }} />
+          <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#2C4964', margin: '0 0 6px' }}>
+            No Audit Logs Found
+          </h3>
+          <p style={{ fontSize: '12px', color: '#6C757D', margin: '0 0 16px' }}>
+            No evaluated radiology reports match your current search or filter criteria.
+          </p>
+          <button onClick={() => setActivePage('upload')} className="btn-medicare-primary">
+            Run New Audit →
+          </button>
+        </div>
+      ) : (
+        <div className="medicare-card" style={{ padding: '0', overflow: 'hidden' }}>
+          <table className="medicare-table">
+            <thead>
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
-                  <FileText size={28} style={{ opacity: 0.5, marginBottom: '6px' }} />
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>No audit records found</div>
-                  <div style={{ fontSize: '11.5px' }}>Run a report audit to populate the archival history log.</div>
-                </td>
+                <th>Audit ID & Timestamp</th>
+                <th>Report Title / Accession</th>
+                <th>Modality</th>
+                <th>Quality Index</th>
+                <th>ACR Status</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
-            ) : (
-              filteredItems.map((item) => {
+            </thead>
+            <tbody>
+              {filteredItems.map((item) => {
                 const score = item.quality_score || 0;
                 const pass = score >= 90;
                 const warn = score >= 70 && score < 90;
-                const auditId = item.audit_result?.audit_id || `RAD-QA-2026-${item.id.slice(0, 4)}`;
+                const auditId = item.audit_result?.audit_id || item.id;
+                const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
 
                 return (
                   <tr key={item.id}>
-                    <td style={{ fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'monospace' }}>
-                      {auditId}
+                    <td>
+                      <div style={{ fontWeight: 800, color: '#1977CC', fontSize: '12px' }}>{auditId}</div>
+                      <div style={{ fontSize: '10.5px', color: '#6C757D', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                        <Calendar size={11} /> {dateStr}
+                      </div>
                     </td>
                     <td>
-                      <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{item.report_title || 'Radiology Report'}</div>
-                      <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{item.modality}</div>
+                      <div style={{ fontWeight: 700, color: '#2C4964', fontSize: '12.5px' }}>{item.report_title}</div>
                     </td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
-                      {item.timestamp ? new Date(item.timestamp).toLocaleString() : 'Recent'}
+                    <td>
+                      <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: '#F1F7FC', border: '1px solid #DDE7F0', color: '#2C4964' }}>
+                        {item.modality}
+                      </span>
                     </td>
-                    <td style={{ fontWeight: 900, color: pass ? '#15803D' : warn ? '#B45309' : '#B91C1C' }}>
-                      {score} / 100
+                    <td>
+                      <div style={{ fontWeight: 900, fontSize: '14px', color: pass ? '#15803D' : warn ? '#B45309' : '#D32F2F' }}>
+                        {score} / 100
+                      </div>
                     </td>
                     <td>
                       <span style={{
-                        fontSize: '9.5px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px',
-                        background: pass ? '#DCFCE7' : warn ? '#FEF3C7' : '#FEE2E2',
-                        color: pass ? '#15803D' : warn ? '#B45309' : '#B91C1C'
+                        fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px',
+                        background: pass ? '#E8F5E9' : warn ? '#FFF8E1' : '#FFEBEE',
+                        color: pass ? '#15803D' : warn ? '#B45309' : '#D32F2F'
                       }}>
                         {item.readiness_status || (pass ? 'Hospital Ready' : 'Requires Review')}
                       </span>
@@ -214,7 +197,7 @@ export default function AnalysisHistoryPage({ historyItems, setHistoryItems, onS
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                         <button
                           onClick={() => { onSelectAudit(item); setActivePage('quality'); }}
-                          className="btn-secondary"
+                          className="btn-medicare-teal"
                           style={{ fontSize: '11px', padding: '4px 8px' }}
                           title="View Quality Dashboard"
                         >
@@ -232,11 +215,11 @@ export default function AnalysisHistoryPage({ historyItems, setHistoryItems, onS
                     </td>
                   </tr>
                 );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
     </div>
   );

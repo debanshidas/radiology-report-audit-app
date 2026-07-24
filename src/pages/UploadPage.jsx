@@ -31,8 +31,6 @@ export default function UploadPage({
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const [activeDemoCase, setActiveDemoCase] = useState(null);
 
-  // Modality is set via demo case selection, dropdown picker, or file upload
-
   const charCount = reportText.length;
   const wordCount = reportText.trim() ? reportText.trim().split(/\s+/).length : 0;
 
@@ -50,40 +48,49 @@ export default function UploadPage({
         throw new Error(data.error || 'The report text could not be extracted.');
       }
 
-      setSelectedFile(data.filename || file.name);
-      setFileSize((file.size / 1024).toFixed(1) + ' KB');
       setReportText(data.text);
-      setActiveDemoCase(null);
-    } catch (error) {
-      setSelectedFile(null);
-      setFileSize(null);
-      setUploadError(error.message || 'The report could not be uploaded.');
+      setSelectedFile(file);
+      setFileSize(data.filesize_kb ? `${data.filesize_kb} KB` : `${(file.size / 1024).toFixed(1)} KB`);
+      if (data.detected_modality) setModality(data.detected_modality);
+      if (data.detection_confidence) setDetectionConfidence(data.detection_confidence);
+    } catch (err) {
+      setUploadError(err.message || 'Error processing file. Please paste report text directly.');
     } finally {
       setIsUploading(false);
     }
-  }, [setReportText]);
+  }, [setReportText, setModality]);
 
-  const handleDrop = useCallback((e) => {
-    e.preventDefault(); setIsDragging(false);
-    const file = e.dataTransfer.files[0];
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer?.files?.[0];
     if (file) uploadFile(file);
-  }, [uploadFile]);
-
-  const handleSelectDemoReport = (demoCase) => {
-    setReportText(demoCase.reportText);
-    setModality(demoCase.modality);
-    setActiveDemoCase(demoCase);
-    setSelectedFile(null);
   };
 
-  const handleRandomizeDemo = () => {
-    const randomCase = DEMO_REPORTS[Math.floor(Math.random() * DEMO_REPORTS.length)];
-    handleSelectDemoReport(randomCase);
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
   };
 
   const toggleSection = (sec) => {
-    if (mandatorySections.includes(sec)) setMandatorySections(mandatorySections.filter(s => s !== sec));
-    else setMandatorySections([...mandatorySections, sec]);
+    if (mandatorySections.includes(sec)) {
+      setMandatorySections(mandatorySections.filter((s) => s !== sec));
+    } else {
+      setMandatorySections([...mandatorySections, sec]);
+    }
+  };
+
+  const handleSelectDemoCase = (demoCase) => {
+    setReportText(demoCase.reportText);
+    setModality(demoCase.modality);
+    setActiveDemoCase(demoCase);
+    setSelectedFile({ name: `${demoCase.title}.txt` });
+    setFileSize('Demo Case');
+  };
+
+  const handleRandomizeDemo = () => {
+    const randomIndex = Math.floor(Math.random() * DEMO_REPORTS.length);
+    handleSelectDemoCase(DEMO_REPORTS[randomIndex]);
   };
 
   return (
@@ -92,84 +99,96 @@ export default function UploadPage({
       {/* Header */}
       <div>
         <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
-          New Clinical Audit Workspace
+          Upload Radiology Report for Clinical Audit
         </h1>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '3px 0 0' }}>
-          Upload a radiology report file (PDF/DOCX/TXT) or select from our 35+ Enterprise Demo Library cases
+          Ingest clinical report text, configure modality parameters, and trigger sub-second 11-dimension ACR quality evaluation
         </p>
       </div>
 
       <AICautionNotice />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px' }}>
         
-        {/* Left Column: File Dropzone, Demo Library & Editor */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Left Main Column: File Upload & Text Editor */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          {/* Upload Area: Pre or Post state */}
+          {/* File Drag-and-Drop Area */}
           {!selectedFile ? (
             <div
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
               style={{
-                background: isDragging ? 'var(--surface-muted)' : 'var(--surface)',
-                border: `2px dashed ${isDragging ? '#0284C7' : 'var(--border)'}`,
-                borderRadius: '8px', padding: '24px', textAlign: 'center',
-                transition: 'all 0.15s'
+                border: `2px dashed ${isDragging ? '#1977CC' : '#CBD5E1'}`,
+                borderRadius: '8px',
+                background: isDragging ? '#EBF5FF' : 'var(--surface)',
+                padding: '32px 24px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
             >
-              <Upload size={28} color="#0284C7" style={{ marginBottom: '8px' }} />
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Drag and drop report file here, or browse
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 14px' }}>
-                Supported Formats: PDF, DOCX, TXT • Maximum File Size: 10 MB
-              </div>
-              <label className="btn-primary" style={{ display: 'inline-flex', cursor: 'pointer' }}>
-                <span>Choose File</span>
-                <input
-                  type="file"
-                  accept=".pdf,.docx,.txt"
-                  style={{ display: 'none' }}
-                  onChange={(e) => { if (e.target.files[0]) uploadFile(e.target.files[0]); }}
-                />
-              </label>
-            </div>
-          ) : (
-            <div className="enterprise-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: '#16A34A', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <CheckCircle2 size={18} />
+              <input
+                type="file"
+                id="fileInput"
+                accept=".txt,.docx,.pdf"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+              <label htmlFor="fileInput" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#F1F7FC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Upload size={22} color="#1977CC" />
                 </div>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#14532D' }}>
-                    {selectedFile}
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {isUploading ? 'Extracting report text...' : 'Drag & drop clinical report file here'}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#15803D' }}>
-                    Successfully uploaded ({fileSize || 'Text Extracted'})
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                    Supports <strong>PDF, DOCX, TXT</strong> files (max 10MB) or paste directly below
+                  </div>
+                </div>
+              </label>
+              {uploadError && (
+                <div style={{ color: '#D32F2F', fontSize: '12px', marginTop: '10px', fontWeight: 600 }}>
+                  ⚠️ {uploadError}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="medicare-card" style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#E8F8F8', border: '1px solid #99F6E4' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <FileText size={20} color="#3FBBC0" />
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#2C4964' }}>
+                    {selectedFile.name}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#6C757D' }}>
+                    Successfully loaded ({fileSize || 'Text Ready'})
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => { setSelectedFile(null); setFileSize(null); setReportText(''); setActiveDemoCase(null); }}
-                className="btn-outline" style={{ fontSize: '11px', padding: '4px 10px', background: '#fff' }}
+                className="btn-medicare-outline" style={{ fontSize: '11px', padding: '4px 10px', background: '#FFF' }}
               >
-                <RefreshCw size={12} /> Replace File
+                <RefreshCw size={12} /> Clear / Replace File
               </button>
             </div>
           )}
 
-          {/* Enterprise Demo Library Control Bar */}
-          <div className="enterprise-card" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-muted)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <BookOpen size={18} color="#0284C7" />
+          {/* MediCare 50-Case Demo Library Banner */}
+          <div className="medicare-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F1F7FC', border: '1px solid #DDE7F0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#1977CC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <BookOpen size={20} color="#FFFFFF" />
+              </div>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  Enterprise Demo Case Library
+                <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#2C4964' }}>
+                  Enterprise Hospital Demo Library (50 Cases)
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                  50 authentic hospital cases across 25 modalities and 5 quality tiers
+                <div style={{ fontSize: '11.5px', color: '#6C757D' }}>
+                  Select pre-loaded cases across 25 modalities and 5 quality tiers (Excellent to Critical)
                 </div>
               </div>
             </div>
@@ -177,148 +196,163 @@ export default function UploadPage({
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 onClick={handleRandomizeDemo}
-                className="btn-secondary"
-                style={{ fontSize: '12px', padding: '6px 12px', background: '#F0FDF4', color: '#16A34A', borderColor: '#BBF7D0' }}
+                className="btn-medicare-teal"
+                style={{ fontSize: '12px', padding: '7px 14px' }}
               >
                 <Shuffle size={13} /> Surprise Me
               </button>
               <button
                 onClick={() => setIsDemoModalOpen(true)}
-                className="btn-primary"
-                style={{ fontSize: '12px', padding: '6px 14px' }}
+                className="btn-medicare-primary"
+                style={{ fontSize: '12px', padding: '7px 16px' }}
               >
                 <BookOpen size={13} /> Browse 50 Cases →
               </button>
             </div>
           </div>
 
-          {/* Active Demo Case Info Banner */}
+          {/* Loaded Demo Case Banner */}
           {activeDemoCase && (
-            <div style={{ padding: '12px 16px', background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ padding: '12px 16px', background: '#EBF5FF', border: '1px solid #BAE6FD', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={16} color="#0284C7" />
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#0369A1' }}>
-                  Loaded Demo Case: "{activeDemoCase.title}" ({activeDemoCase.modality})
+                <Sparkles size={16} color="#1977CC" />
+                <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#2C4964' }}>
+                  Active Case: "{activeDemoCase.title}" ({activeDemoCase.modality})
                 </span>
               </div>
-              <span style={{ fontSize: '11px', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', background: '#0284C7', color: '#FFF' }}>
-                Expected Score: {activeDemoCase.expectedScore}/100 ({activeDemoCase.qualityLevel})
+              <span style={{ fontSize: '11px', fontWeight: 800, padding: '3px 10px', borderRadius: '4px', background: '#1977CC', color: '#FFFFFF' }}>
+                Tier: {activeDemoCase.qualityLevel} ({activeDemoCase.expectedScore}/100)
               </span>
             </div>
           )}
 
           {/* Text Editor */}
-          <div className="enterprise-card" style={{ padding: '0', overflow: 'hidden' }}>
+          <div className="medicare-card" style={{ padding: '0', overflow: 'hidden' }}>
             <div style={{
-              background: 'var(--surface-muted)', borderBottom: '1px solid var(--border)',
-              padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              background: '#F1F7FC', borderBottom: '1px solid #DDE7F0',
+              padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
             }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Clinical Report Text Editor
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#2C4964' }}>
+                Clinical Radiology Report Editor
               </span>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                {charCount} characters • {wordCount} words
+              <span style={{ fontSize: '11.5px', color: '#6C757D', fontWeight: 600 }}>
+                {charCount} chars • {wordCount} words
               </span>
             </div>
-            
+
             <textarea
-              rows={16}
               value={reportText}
-              onChange={(e) => { setReportText(e.target.value); setActiveDemoCase(null); }}
-              placeholder="Paste radiology report text here or select a case from the Enterprise Demo Library above..."
+              onChange={(e) => setReportText(e.target.value)}
+              placeholder="Paste complete radiology report text here (including Patient Demographics, History, Technique, Findings, and Impression)..."
               style={{
-                width: '100%', padding: '16px', border: 'none', resize: 'vertical',
-                fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.6,
-                background: 'var(--surface)', color: 'var(--text-primary)', outline: 'none'
+                width: '100%', minHeight: '320px', padding: '16px',
+                border: 'none', resize: 'vertical', fontFamily: 'monospace',
+                fontSize: '12.5px', lineHeight: 1.6, background: 'var(--surface)',
+                color: 'var(--text-primary)', outline: 'none'
               }}
             />
+
+            {reportText && (
+              <div style={{ padding: '10px 16px', background: 'var(--surface-muted)', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => { setReportText(''); setActiveDemoCase(null); setSelectedFile(null); }}
+                  className="btn-destructive"
+                >
+                  <Trash2 size={12} /> Clear Text
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Big Action CTA Button */}
+          <button
+            onClick={onStartAudit}
+            disabled={!reportText.trim() || isLoading}
+            className="btn-medicare-primary"
+            style={{
+              width: '100%', padding: '14px', fontSize: '15px', fontWeight: 800,
+              justifyContent: 'center', borderRadius: '8px', opacity: (!reportText.trim() || isLoading) ? 0.6 : 1
+            }}
+          >
+            {isLoading ? (
+              <>
+                <RefreshCw size={18} className="animate-spin" /> Evaluating 11 ACR Quality Dimensions...
+              </>
+            ) : (
+              <>
+                <Play size={18} /> Run Sub-Second AI Quality Audit →
+              </>
+            )}
+          </button>
 
         </div>
 
-        {/* Right Column: Parameters & Launch Button */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Right Column: Parameters & Mandatory Sections */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          <div className="enterprise-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
-              Audit Configuration
-            </h3>
+          {/* Modality Selector */}
+          <div className="medicare-card" style={{ padding: '18px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 800, color: '#2C4964', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
+              Target Imaging Modality
+            </label>
+            <select
+              value={modality}
+              onChange={(e) => setModality(e.target.value)}
+              style={{
+                width: '100%', padding: '10px', borderRadius: '6px',
+                border: '1px solid #CBD5E1', fontSize: '13px', fontWeight: 600,
+                color: '#2C4964', background: '#FFFFFF', outline: 'none'
+              }}
+            >
+              {[
+                'Chest X-Ray', 'Abdomen X-Ray', 'Skull X-Ray', 'Spine X-Ray', 'Knee X-Ray', 'Shoulder X-Ray', 'Pelvis X-Ray',
+                'CT Brain', 'CT Chest', 'CT Abdomen', 'CT Spine', 'CT Angiography', 'HRCT Chest',
+                'MRI Brain', 'MRI Spine', 'MRI Knee', 'MRI Shoulder', 'MRI Abdomen', 'MR Angiography',
+                'Ultrasound Abdomen', 'Ultrasound Pelvis', 'Ultrasound Obstetrics', 'Thyroid Ultrasound', 'Doppler Study',
+                'Mammography'
+              ].map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
 
-            {/* Modality Selector */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                  Target Exam Modality
-                </span>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#16A34A', background: '#DCFCE7', padding: '2px 6px', borderRadius: '4px' }}>
-                  ✨ Auto-Detected ({detectionConfidence}%)
-                </span>
-              </div>
-              
-              <select
-                value={modality}
-                onChange={(e) => setModality(e.target.value)}
-                style={{
-                  width: '100%', padding: '8px 12px', borderRadius: '6px',
-                  border: '1px solid var(--border)', background: 'var(--surface-muted)',
-                  fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', outline: 'none'
-                }}
-              >
-                {['Chest X-Ray', 'Abdomen X-Ray', 'Skull X-Ray', 'Spine X-Ray', 'Knee X-Ray', 'Shoulder X-Ray', 'Pelvis X-Ray', 'CT Brain', 'CT Chest', 'CT Abdomen', 'CT Spine', 'MRI Brain', 'MRI Spine', 'MRI Knee', 'MRI Shoulder', 'MRI Abdomen', 'Ultrasound', 'Ultrasound Abdomen', 'Ultrasound Pelvis', 'Ultrasound Obstetrics', 'Thyroid Ultrasound', 'Doppler Study', 'Mammography', 'HRCT Chest', 'CT Angiography', 'MR Angiography', 'PET-CT', 'Fluoroscopy', 'DEXA Scan'].map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
+            <div style={{ fontSize: '11px', color: '#6C757D', marginTop: '8px', lineHeight: 1.4 }}>
+              Determines modality-specific ACR practice parameters and required technique parameters.
+            </div>
+          </div>
+
+          {/* Mandatory ACR Sections Checkbox List */}
+          <div className="medicare-card" style={{ padding: '18px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 800, color: '#2C4964', textTransform: 'uppercase', marginBottom: '12px' }}>
+              Mandatory ACR Report Sections
             </div>
 
-            {/* Mandatory Sections Checkboxes */}
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                Mandatory ACR Audit Sections
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {SECTION_OPTIONS.map((sec) => (
-                  <label key={sec} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {SECTION_OPTIONS.map((sec) => {
+                const isChecked = mandatorySections.includes(sec);
+                return (
+                  <label key={sec} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: '#2C4964', fontWeight: isChecked ? 600 : 400 }}>
                     <input
                       type="checkbox"
-                      checked={mandatorySections.includes(sec)}
+                      checked={isChecked}
                       onChange={() => toggleSection(sec)}
-                      style={{ borderRadius: '4px', accentColor: '#0284C7' }}
+                      style={{ accentColor: '#1977CC', width: '15px', height: '15px', cursor: 'pointer' }}
                     />
                     <span>{sec}</span>
                   </label>
-                ))}
-              </div>
+                );
+              })}
             </div>
-
-            {/* Run Analysis Button */}
-            <button
-              onClick={onStartAudit}
-              disabled={isLoading || !reportText.trim()}
-              className="btn-primary"
-              style={{
-                width: '100%', padding: '12px', fontSize: '13px', fontWeight: 800,
-                justifyContent: 'center', marginTop: '8px',
-                opacity: (isLoading || !reportText.trim()) ? 0.6 : 1,
-                cursor: (isLoading || !reportText.trim()) ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {isLoading ? (
-                <>Analyzing Report Engine...</>
-              ) : (
-                <>Run QA Audit & Evaluation →</>
-              )}
-            </button>
           </div>
 
         </div>
 
       </div>
 
-      {/* Demo Report Library Modal */}
+      {/* 50-Case Enterprise Demo Library Modal */}
       <DemoLibraryModal
         isOpen={isDemoModalOpen}
         onClose={() => setIsDemoModalOpen(false)}
-        onSelectReport={handleSelectDemoReport}
+        onSelectDemo={handleSelectDemoCase}
       />
 
     </div>

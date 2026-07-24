@@ -1,55 +1,82 @@
 import React from 'react';
-import { Activity, ShieldCheck, Sun, Moon, Building2, User } from 'lucide-react';
+import { Activity, ShieldCheck, Sun, Moon, Building2, Menu, Sparkles } from 'lucide-react';
 
-export default function Header({ currentView, setCurrentView, serverConnected, theme, setTheme }) {
+export default function Header({ sidebarCollapsed, setSidebarCollapsed, theme, setTheme, provider, setProvider, serverConnected }) {
   return (
-    <header className="app-header">
+    <header style={{
+      height: '52px',
+      background: '#2C4964',
+      borderBottom: '1px solid #162C40',
+      display: 'flex',
+      alignItems: 'center',
+      justify: 'space-between',
+      padding: '0 20px',
+      color: '#FFFFFF',
+      boxShadow: '0 2px 8px rgba(44, 73, 100, 0.15)',
+      flexShrink: 0
+    }}>
       {/* Brand & Facility Info */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div
-          onClick={() => setCurrentView('app')}
-          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          style={{
+            background: 'rgba(255,255,255,0.08)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '4px',
+            color: '#FFFFFF',
+            padding: '5px 8px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justify: 'center'
+          }}
+          title="Toggle Navigation Menu"
         >
+          <Menu size={16} />
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            width: '30px', height: '30px', borderRadius: '4px',
-            background: '#0284C7', color: '#FFFFFF',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
+            width: '30px', height: '30px', borderRadius: '6px',
+            background: '#1977CC', color: '#FFFFFF',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 6px rgba(25, 119, 204, 0.4)'
           }}>
-            <Activity size={16} />
+            <ShieldCheck size={18} />
           </div>
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.2px', lineHeight: 1.1 }}>
-              RadAudit Enterprise <span style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 700, marginLeft: '4px' }}>HIS v2.4</span>
+            <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.2px', lineHeight: 1.1 }}>
+              RadAudit <span style={{ fontSize: '10px', color: '#3FBBC0', fontWeight: 700, marginLeft: '4px' }}>MediCare Enterprise</span>
             </div>
-            <div style={{ fontSize: '10px', color: '#94A3B8', marginTop: '1px' }}>
-              Radiology Report Quality Assurance Platform
+            <div style={{ fontSize: '10px', color: '#B2C7DB', marginTop: '1px' }}>
+              ACR Clinical Quality Assurance Gateway
             </div>
           </div>
         </div>
 
         {/* Facility Divider */}
-        <div style={{ height: '18px', width: '1px', background: '#334155' }} />
+        <div className="hidden-mobile" style={{ height: '18px', width: '1px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#CBD5E1', fontSize: '11px', fontWeight: 600 }}>
-          <Building2 size={13} color="#94A3B8" />
-          <span>Central Radiology QA Unit — Baystate Health System</span>
+        <div className="hidden-mobile" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#B2C7DB', fontSize: '11px', fontWeight: 500 }}>
+          <Building2 size={13} color="#3FBBC0" />
+          <span>Central Radiology QA Unit • Baystate Health System</span>
         </div>
       </div>
 
-      {/* Center/Right Status & User Info */}
+      {/* Right Controls & User Credential */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Status Pill */}
+        {/* Connection Status Pill */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '6px',
-          background: '#1E293B', border: '1px solid #334155',
-          borderRadius: '4px', padding: '3px 10px'
+          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: '4px', padding: '4px 10px'
         }}>
           <span style={{
             width: '6px', height: '6px', borderRadius: '50%',
-            background: '#22C55E'
+            background: '#3FBBC0'
           }} />
-          <span style={{ fontSize: '11px', fontWeight: 600, color: '#E2E8F0' }}>
-            {serverConnected ? 'HIS Gateway Online (Flask)' : 'HIS Gateway Online (Cloud AI)'}
+          <span style={{ fontSize: '11px', fontWeight: 600, color: '#FFFFFF' }}>
+            {serverConnected ? 'HIS Online (Flask)' : 'Cloud AI (Groq/Gemini)'}
           </span>
         </div>
 
@@ -57,32 +84,32 @@ export default function Header({ currentView, setCurrentView, serverConnected, t
         <button
           onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
           style={{
-            background: '#1E293B', border: '1px solid #334155', borderRadius: '4px',
-            padding: '5px 9px', color: '#94A3B8', cursor: 'pointer',
+            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px',
+            padding: '5px 9px', color: '#FFFFFF', cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 600
           }}
           title="Toggle Theme"
         >
-          {theme === 'light' ? <Moon size={13} /> : <Sun size={13} />}
+          {theme === 'light' ? <Moon size={13} color="#3FBBC0" /> : <Sun size={13} color="#3FBBC0" />}
           <span>{theme === 'light' ? 'Dark' : 'Light'}</span>
         </button>
 
         {/* User Credential Badge */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          background: '#1E293B', border: '1px solid #334155',
+          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
           borderRadius: '4px', padding: '4px 10px'
         }}>
           <div style={{
             width: '22px', height: '22px', borderRadius: '50%',
-            background: '#0284C7', color: '#FFFFFF', fontSize: '10px',
+            background: '#1977CC', color: '#FFFFFF', fontSize: '10px',
             fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            DA
+            QA
           </div>
           <div style={{ fontSize: '11px', lineHeight: 1.2 }}>
-            <div style={{ fontWeight: 700, color: '#F8FAFC' }}>Dr. Admin, MD</div>
-            <div style={{ fontSize: '9.5px', color: '#94A3B8' }}>Chief QA Radiologist</div>
+            <div style={{ fontWeight: 700, color: '#FFFFFF' }}>Dr. QA Officer, MD</div>
+            <div style={{ fontSize: '9.5px', color: '#3FBBC0' }}>Senior Radiologist</div>
           </div>
         </div>
       </div>
