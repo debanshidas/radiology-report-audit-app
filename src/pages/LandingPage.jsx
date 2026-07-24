@@ -1,77 +1,79 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import {
-  Brain, BarChart3, Activity, FileText, Lightbulb, History,
-  ShieldCheck, Zap, ChevronDown, Stethoscope, Heart, Activity as PulseIcon
+  Brain, BarChart3, ClipboardCheck, FileText, History, ShieldCheck, Zap, Stethoscope,
+  ChevronDown, Heart, Activity as PulseIcon
 } from 'lucide-react';
 
 const FEATURES = [
   {
     icon: Brain,
-    title: 'AI-Powered Report Evaluation',
-    desc: 'Automated deep clinical validation using state-of-the-art Llama 3.3 and Gemini models.'
+    title: 'AI Report Evaluation',
+    desc: 'Automatically evaluates radiology reports using artificial intelligence and advanced quality assessment techniques.',
+    stats: ['Multi-Dimensional Analysis', 'Clinical Accuracy Assurance', 'Intelligent Cognitive Insights']
   },
   {
     icon: BarChart3,
-    title: 'Multi-Dimensional Quality Scoring',
-    desc: 'Audits consistency, structure, details, and clinical safety across 11 discrete ACR dimensions.'
+    title: 'Quality Scoring',
+    desc: 'Provides detailed scoring across multiple quality dimensions with an overall audit score.',
+    stats: ['11 Evaluation Dimensions', 'Overall Quality Index', 'Mathematical Deduction Log']
   },
   {
-    icon: Activity,
-    title: 'Detailed Score Breakdown',
-    desc: 'Presents explicit mathematical score logs, deductions lists, and quality indicator tracking.'
+    icon: ClipboardCheck,
+    title: 'Clinical Recommendations',
+    desc: 'Generates intelligent recommendations to improve report quality and standardization.',
+    stats: ['Actionable Correction Proposals', 'Quality & Precision Boost', 'Best Documentation Practices']
   },
   {
     icon: FileText,
-    title: 'PDF Audit Report Generation',
-    desc: 'One-click client-side export of standardized clinical audit records for compliance.'
-  },
-  {
-    icon: Lightbulb,
-    title: 'Clinical Recommendations',
-    desc: 'Generates instant Senior QA Officer remarks, correction scopes, and wording improvement proposals.'
+    title: 'PDF Audit Reports',
+    desc: 'Download comprehensive audit reports containing scores, observations, and recommendations.',
+    stats: ['One-Click Client Synthesis', 'Compliance Validation Stamps', 'Score Log File Export']
   },
   {
     icon: History,
-    title: 'Report History Tracking',
-    desc: 'Manages multi-version history, document comparison state, and departmental quality trends.'
+    title: 'Report History',
+    desc: 'View and manage previously audited reports with complete tracking history.',
+    stats: ['Log Database Records', 'Active Version History', 'Accession ID Filtering']
   },
   {
     icon: ShieldCheck,
-    title: 'Secure Local Processing',
-    desc: 'Designed with patient data privacy first. PHI remains strictly in-browser during assessment.'
+    title: 'Secure Processing',
+    desc: 'Ensures uploaded reports remain secure and confidential throughout the audit process.',
+    stats: ['Strict HIPAA Compliance', '100% In-Browser Execution', 'Encrypted Api Key Gate']
   },
   {
     icon: Zap,
-    title: 'Fast & Accurate Analysis',
-    desc: 'Sub-second processing engine delivering reliable structured report evaluation.'
+    title: 'Fast Analysis',
+    desc: 'Receive audit results within seconds using optimized AI processing.',
+    stats: ['Sub-Second Processing', 'Real-Time QA Feedback', 'Optimized Model Routing']
+  },
+  {
+    icon: Stethoscope,
+    title: 'Standardized Reporting',
+    desc: 'Promotes structured and standardized radiology documentation aligned with best practices.',
+    stats: ['ACR Practice Parameters', 'RadLex Anatomical Vocabulary', 'Structured Header Check']
   }
 ];
 
 export default function LandingPage({ onLaunchApp }) {
-  const featuresRef = useRef(null);
-
-  const scrollToFeatures = () => {
-    featuresRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   // Container variant for staggering cards
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.08
+        staggerChildren: 0.05
       }
     }
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.4, ease: 'easeOut' }
+      transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1.0] }
     }
   };
 
@@ -130,11 +132,11 @@ export default function LandingPage({ onLaunchApp }) {
         }}
       />
 
-      {/* Hero Section Container */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 24px', position: 'relative', zIndex: 2 }}>
+      {/* Welcome Hero Content */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '50px 24px', position: 'relative', zIndex: 2 }}>
         
         {/* Header Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '60px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '50px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               width: '32px', height: '32px', borderRadius: '8px',
@@ -154,16 +156,17 @@ export default function LandingPage({ onLaunchApp }) {
           </div>
         </div>
 
-        {/* Main Two-Column Layout */}
+        {/* Main Two-Column Hero Layout */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.05fr)',
           gap: '40px',
           alignItems: 'center',
-          minHeight: '65vh'
+          minHeight: '60vh',
+          marginBottom: '60px'
         }} className="landing-grid">
           
-          {/* Left Column: Text Content */}
+          {/* Left Column: Text & CTA Button */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -216,25 +219,22 @@ export default function LandingPage({ onLaunchApp }) {
               The system analyzes uploaded reports across multiple quality dimensions, including clinical completeness, terminology consistency, report structure, readability, findings, impressions, and overall documentation quality. It provides detailed scoring, actionable recommendations, and downloadable audit reports to help improve reporting standards and support continuous quality improvement in radiology.
             </motion.p>
 
-            {/* Premium CTA Buttons */}
+            {/* CTA Button Block (Learn More removed completely) */}
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              style={{ display: 'flex', gap: '12px', marginTop: '10px' }}
-              className="landing-buttons"
+              style={{ display: 'flex', marginTop: '10px' }}
             >
-              {/* Premium Gradient Button */}
               <button
                 onClick={onLaunchApp}
                 style={{
-                  position: 'relative',
-                  padding: '12px 30px',
+                  padding: '12px 36px',
                   borderRadius: '30px',
                   border: 'none',
                   color: '#FFFFFF',
                   fontWeight: 700,
-                  fontSize: '13.5px',
+                  fontSize: '14px',
                   cursor: 'pointer',
                   overflow: 'hidden',
                   outline: 'none',
@@ -245,46 +245,21 @@ export default function LandingPage({ onLaunchApp }) {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundPosition = 'right center';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.transform = 'scale(1.04) translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 8px 24px rgba(63, 187, 192, 0.4)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundPosition = 'left center';
-                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.transform = 'scale(1) translateY(0)';
                   e.currentTarget.style.boxShadow = '0 6px 20px rgba(25, 119, 204, 0.35)';
                 }}
               >
                 Get Started
               </button>
-
-              <button
-                onClick={scrollToFeatures}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '30px',
-                  border: '1px solid #1977CC',
-                  background: 'transparent',
-                  color: '#1977CC',
-                  fontWeight: 700,
-                  fontSize: '13.5px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(25, 119, 204, 0.05)';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                Learn More
-              </button>
             </motion.div>
           </div>
 
-          {/* Right Column: Premium Interactive Scan/Brain Illustration */}
+          {/* Right Column: Scan MRI graphic */}
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
             <motion.div
               animate={{
@@ -307,13 +282,9 @@ export default function LandingPage({ onLaunchApp }) {
                 zIndex: 2
               }}
             >
-              {/* Fake Scan Screen Mockup */}
               <div style={{ background: '#162C40', borderRadius: '12px', height: '200px', width: '100%', position: 'relative', overflow: 'hidden', border: '1px solid #2C4964' }}>
-                {/* SVG Brain MRI scan graphic */}
                 <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', opacity: 0.85 }}>
-                  {/* Outer circle skull */}
                   <circle cx="50" cy="50" r="32" fill="none" stroke="#3FBBC0" strokeWidth="1.5" strokeDasharray="3, 3" />
-                  {/* Animated scanner horizontal line */}
                   <motion.line
                     x1="10" y1="20" x2="90" y2="20"
                     stroke="#1977CC" strokeWidth="2"
@@ -326,12 +297,9 @@ export default function LandingPage({ onLaunchApp }) {
                       ease: 'easeInOut'
                     }}
                   />
-                  {/* Symmetrical brain shape */}
                   <path d="M50,22 C32,22 30,40 30,55 C30,70 42,78 50,78 C58,78 70,70 70,55 C70,40 68,22 50,22 Z" fill="rgba(63, 187, 192, 0.15)" stroke="#3FBBC0" strokeWidth="2" />
-                  {/* Ventricles / inner brain scan details */}
                   <path d="M45,45 Q40,55 45,65 Q50,55 45,45 Z M55,45 Q60,55 55,65 Q50,55 55,45 Z" fill="#1977CC" opacity="0.6" />
                 </svg>
-                {/* Holographic overlay */}
                 <div style={{ position: 'absolute', bottom: '12px', left: '12px', fontSize: '10px', color: '#3FBBC0', fontFamily: 'monospace', fontWeight: 'bold' }}>
                   [SCAN SYSTEM AI ENGINE ACTIVE]
                 </div>
@@ -340,7 +308,6 @@ export default function LandingPage({ onLaunchApp }) {
                 </div>
               </div>
 
-              {/* Fake QA Metrics Card inside Illustration */}
               <div style={{ marginTop: '20px', borderTop: '1px solid #DDE7F0', paddingTop: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 800, color: '#1977CC', textTransform: 'uppercase' }}>Report Compliance Index</span>
@@ -367,7 +334,7 @@ export default function LandingPage({ onLaunchApp }) {
               </div>
             </motion.div>
 
-            {/* Micro Floating Medical Icons surrounding brain */}
+            {/* Floating items */}
             <motion.div
               animate={{ y: [-5, 5, -5] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
@@ -375,43 +342,36 @@ export default function LandingPage({ onLaunchApp }) {
             >
               <Stethoscope size={16} color="#1977CC" />
             </motion.div>
-            <motion.div
-              animate={{ y: [5, -5, 5] }}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ position: 'absolute', bottom: '15%', right: '5%', zIndex: 3, background: '#FFFFFF', padding: '8px', borderRadius: '50%', boxShadow: '0 4px 10px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}
-            >
-              <Heart size={16} color="#3FBBC0" />
-            </motion.div>
           </div>
 
         </div>
 
       </div>
 
-      {/* Features Grid Section */}
-      <div ref={featuresRef} style={{ background: '#FFFFFF', borderTop: '1px solid #DDE7F0', padding: '80px 24px' }}>
+      {/* Platform Features Section (Animated Cards) */}
+      <div style={{ background: 'rgba(255, 255, 255, 0.85)', borderTop: '1px solid #DDE7F0', padding: '80px 24px', position: 'relative', zIndex: 2 }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           
           {/* Section Header */}
-          <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#2C4964', margin: '0 0 10px 0' }}>
-              Advanced Clinical Auditing Capabilities
+          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+            <h2 style={{ fontSize: '26px', fontWeight: 900, color: '#2C4964', margin: '0 0 12px 0', letterSpacing: '-0.5px' }}>
+              Why Choose Radiology Report Audit System?
             </h2>
-            <p style={{ fontSize: '13.5px', color: '#6C757D', maxWidth: '600px', margin: '0 auto' }}>
-              The system operates on an ACR-informed framework to ensure all quality indicators align with medical documentation standards.
+            <p style={{ fontSize: '13.5px', color: '#6C757D', maxWidth: '750px', margin: '0 auto', lineHeight: 1.6, fontWeight: 500 }}>
+              Experience AI-powered radiology quality assessment through an intelligent, secure, and easy-to-use platform designed to standardize radiology reporting and improve clinical documentation.
             </p>
           </div>
 
-          {/* Cards Grid */}
+          {/* Cards Grid: Responsive Desktop:4, Tablet:2, Mobile:1 */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-100px' }}
+            viewport={{ once: true, margin: '-60px' }}
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-              gap: '20px'
+              gap: '24px'
             }}
           >
             {FEATURES.map((feat, idx) => {
@@ -420,31 +380,67 @@ export default function LandingPage({ onLaunchApp }) {
                 <motion.div
                   key={idx}
                   variants={cardVariants}
-                  whileHover={{ y: -6, boxShadow: '0 12px 24px rgba(44, 73, 100, 0.08)' }}
+                  whileHover={{
+                    scale: 1.03,
+                    y: -8,
+                    boxShadow: '0 16px 32px rgba(44, 73, 100, 0.12)',
+                    borderColor: '#1977CC'
+                  }}
                   style={{
-                    background: '#F8FAFC',
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    backdropFilter: 'blur(10px)',
                     border: '1px solid #E2E8F0',
                     borderRadius: '16px',
                     padding: '24px',
-                    transition: 'all 0.2s ease',
-                    cursor: 'default'
+                    transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1.0)',
+                    cursor: 'default',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 4px 12px rgba(44, 73, 100, 0.03)'
                   }}
                 >
-                  <div style={{
-                    width: '40px', height: '40px', borderRadius: '10px',
-                    background: 'rgba(25, 119, 204, 0.06)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    marginBottom: '16px', border: '1px solid rgba(25, 119, 204, 0.15)'
-                  }}>
-                    <IconComponent size={20} color="#1977CC" />
+                  <div>
+                    {/* Floating Icon Box */}
+                    <div style={{
+                      width: '44px', height: '44px', borderRadius: '12px',
+                      background: 'rgba(25, 119, 204, 0.05)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      marginBottom: '18px', border: '1px solid rgba(25, 119, 204, 0.12)'
+                    }}>
+                      <IconComponent size={20} color="#1977CC" />
+                    </div>
+                    
+                    <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#2C4964', margin: '0 0 10px 0', letterSpacing: '-0.2px' }}>
+                      {feat.title}
+                    </h3>
+                    
+                    <p style={{ fontSize: '12.5px', color: '#6C757D', lineHeight: 1.55, margin: '0 0 20px 0' }}>
+                      {feat.desc}
+                    </p>
                   </div>
-                  
-                  <h3 style={{ fontSize: '14.5px', fontWeight: 800, color: '#2C4964', margin: '0 0 8px 0' }}>
-                    {feat.title}
-                  </h3>
-                  <p style={{ fontSize: '12px', color: '#6C757D', lineHeight: 1.5, margin: 0 }}>
-                    {feat.desc}
-                  </p>
+
+                  {/* Bulleted Feature Highlights/Statistics */}
+                  <div style={{
+                    borderTop: '1px solid #E2E8F0',
+                    paddingTop: '14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                  }}>
+                    {feat.stats.map((stat, sIdx) => (
+                      <div key={sIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{
+                          width: '4px', height: '4px', borderRadius: '50%',
+                          background: '#3FBBC0', display: 'inline-block'
+                        }} />
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#2C4964' }}>
+                          {stat}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
                 </motion.div>
               );
             })}
@@ -453,8 +449,8 @@ export default function LandingPage({ onLaunchApp }) {
         </div>
       </div>
 
-      {/* Small Legal / Compliance Footer */}
-      <div style={{ background: '#F1F7FC', borderTop: '1px solid #DDE7F0', padding: '24px', textAlign: 'center', fontSize: '11px', color: '#6C757D' }}>
+      {/* Compliance Footer */}
+      <div style={{ background: '#F1F7FC', borderTop: '1px solid #DDE7F0', padding: '24px', textAlign: 'center', fontSize: '11.5px', color: '#6C757D', position: 'relative', zIndex: 2 }}>
         © 2026 Radiology Report Audit System (RadAudit). HIPAA Compliant In-Browser Execution.
       </div>
 
