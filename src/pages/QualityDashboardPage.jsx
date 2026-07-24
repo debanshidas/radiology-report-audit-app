@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { BarChart3, CheckCircle2, XCircle, AlertTriangle, Lightbulb, ChevronDown, ChevronUp, FileText, Eye, AlertCircle, ArrowLeftRight, History, Download, HelpCircle, Info, ShieldAlert } from 'lucide-react';
+import { BarChart3, CheckCircle2, XCircle, AlertTriangle, Lightbulb, ChevronDown, ChevronUp, FileText, Eye, AlertCircle, History, Download, HelpCircle, Info, ShieldAlert } from 'lucide-react';
 import AICautionNotice from '../components/AICautionNotice';
-import ReportDiffView from '../components/ReportDiffView';
 import VersionHistoryDrawer from '../components/VersionHistoryDrawer';
+import { calculateDimensionScores } from '../utils/directGroqAudit';
 
 function getScoreGrade(score) {
   if (score >= 95) return { grade: 'Excellent', status: 'Hospital Ready', bg: '#E8F5E9', text: '#15803D', border: '#86EFAC' };
@@ -33,7 +33,7 @@ const getDimensionDefinition = (dim) => {
 };
 
 export default function QualityDashboardPage({ auditResult, reportText, setReportText, setActivePage }) {
-  const [activeTab, setActiveTab] = useState('overview'); // overview, diff, versions
+  const [activeTab, setActiveTab] = useState('overview'); // overview, versions
   const [expandedDim, setExpandedDim] = useState(null);
   const [showScoringGuide, setShowScoringGuide] = useState(false);
   const [showAllDefinitions, setShowAllDefinitions] = useState(false);
@@ -62,6 +62,9 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
     : (res.quality_score ?? 80);
 
   const gradeInfo = getScoreGrade(effectiveScore);
+
+  // Calculate dimension scores dynamically so their sum ALWAYS equals the effective score exactly!
+  const finalDimensions = calculateDimensionScores(effectiveScore, res.deductions_log);
 
   // Dynamically resolve original and corrected report text so it is NEVER blank
   const effectiveOriginalText = reportText || res.original_report_text || res.report_text || res.reportText || '';
@@ -107,7 +110,6 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
       <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid #DDE7F0', paddingBottom: '8px' }}>
         {[
           { id: 'overview', label: '11-Dimension Overview', icon: BarChart3 },
-          { id: 'diff', label: 'Side-by-Side Diff View', icon: ArrowLeftRight },
           { id: 'versions', label: 'Version History', icon: History },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -229,7 +231,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between' }}>
                 <span style={{ fontSize: '11px', fontWeight: 800, color: '#1977CC', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                   Senior QA Officer Audit Remarks & Summary
                 </span>
@@ -345,7 +347,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                 </tr>
               </thead>
               <tbody>
-                {(res.dimensions || []).map((dim, idx) => {
+                {(finalDimensions || []).map((dim, idx) => {
                   const dimId = dim.id || idx;
                   const isExpanded = expandedDim === dimId;
                   const pass = dim.score >= (dim.max_marks * 0.9);
@@ -443,16 +445,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
         </>
       )}
 
-      {/* TAB 2: SIDE-BY-SIDE DIFF VIEW */}
-      {activeTab === 'diff' && (
-        <ReportDiffView
-          originalText={effectiveOriginalText}
-          correctedText={effectiveCorrectedText}
-          onApplyCorrection={(txt) => setReportText && setReportText(txt)}
-        />
-      )}
-
-      {/* TAB 3: VERSION HISTORY */}
+      {/* TAB 2: VERSION HISTORY */}
       {activeTab === 'versions' && (
         <VersionHistoryDrawer
           versions={versionList}

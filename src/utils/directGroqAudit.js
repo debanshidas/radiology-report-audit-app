@@ -135,6 +135,124 @@ ${report_text}
 }
 
 /**
+ * Recalculates individual dimension scores based on deduction logs to guarantee 100% mathematical consistency.
+ * The sum of the 11 dimension scores is guaranteed to equal the overall qualityScore.
+ */
+export function calculateDimensionScores(qualityScore, deductionsLog) {
+  // Initialize standard 11 dimensions with full max_marks
+  const dims = [
+    { id: 'patient_demographics', name: 'Patient Demographics', weight: '10%', score: 10, max_marks: 10, details: ['Patient Name, MRN, DOB, Age, Gender, and Study Date evaluated.'] },
+    { id: 'clinical_history', name: 'Clinical History / Indication', weight: '10%', score: 10, max_marks: 10, details: ['Chief complaint, indication, and clinical diagnostic question evaluated.'] },
+    { id: 'procedure_details', name: 'Procedure Details', weight: '10%', score: 10, max_marks: 10, details: ['Imaging technique, pulse sequences, and contrast dosage evaluated.'] },
+    { id: 'findings', name: 'Findings', weight: '20%', score: 20, max_marks: 20, details: ['Detailed anatomical observation and lesion measurements.'] },
+    { id: 'impression', name: 'Impression / Conclusion', weight: '20%', score: 20, max_marks: 20, details: ['Summary diagnostic impression and clinical recommendations.'] },
+    { id: 'terminology', name: 'Medical Terminology', weight: '10%', score: 10, max_marks: 10, details: ['RadLex terminology precision and quantitative metrics.'] },
+    { id: 'template', name: 'Template Compliance', weight: '4%', score: 4, max_marks: 4, details: ['ACR 7-section structured section headers.'] },
+    { id: 'formatting', name: 'Formatting & Structure', weight: '4%', score: 4, max_marks: 4, details: ['Paragraph legibility and spacing.'] },
+    { id: 'consistency', name: 'Consistency (Findings vs Impression)', weight: '4%', score: 4, max_marks: 4, details: ['Right vs Left laterality agreement between sections.'] },
+    { id: 'grammar', name: 'Grammar & Documentation Quality', weight: '4%', score: 4, max_marks: 4, details: ['Absence of typos or template errors.'] },
+    { id: 'completeness', name: 'Overall Clinical Completeness', weight: '4%', score: 4, max_marks: 4, details: ['Comparison study and radiologist signature.'] }
+  ];
+
+  // Apply deductions log directly to matching dimensions
+  if (Array.isArray(deductionsLog)) {
+    deductionsLog.forEach(ded => {
+      const pts = Math.abs(ded.points || 0);
+      const sectionName = (ded.section || '').toLowerCase();
+      const reasonText = (ded.reason || '').toLowerCase();
+
+      let matchedDim = dims.find(d => 
+        (d.id && sectionName.includes(d.id.toLowerCase())) ||
+        (d.name && sectionName.includes(d.name.toLowerCase())) ||
+        (d.id && reasonText.includes(d.id.toLowerCase())) ||
+        (d.name && reasonText.includes(d.name.toLowerCase()))
+      );
+
+      if (!matchedDim) {
+        if (sectionName.includes('demographic')) {
+          matchedDim = dims.find(d => d.id === 'patient_demographics');
+        } else if (sectionName.includes('history') || sectionName.includes('indication')) {
+          matchedDim = dims.find(d => d.id === 'clinical_history');
+        } else if (sectionName.includes('procedure') || sectionName.includes('technique')) {
+          matchedDim = dims.find(d => d.id === 'procedure_details');
+        } else if (sectionName.includes('finding')) {
+          matchedDim = dims.find(d => d.id === 'findings');
+        } else if (sectionName.includes('impression') || sectionName.includes('conclusion')) {
+          matchedDim = dims.find(d => d.id === 'impression');
+        } else if (sectionName.includes('term') || sectionName.includes('vocab')) {
+          matchedDim = dims.find(d => d.id === 'terminology');
+        } else if (sectionName.includes('template')) {
+          matchedDim = dims.find(d => d.id === 'template');
+        } else if (sectionName.includes('format')) {
+          matchedDim = dims.find(d => d.id === 'formatting');
+        } else if (sectionName.includes('consistent') || sectionName.includes('laterality')) {
+          matchedDim = dims.find(d => d.id === 'consistency');
+        } else if (sectionName.includes('grammar') || sectionName.includes('typo')) {
+          matchedDim = dims.find(d => d.id === 'grammar');
+        } else if (sectionName.includes('complete') || sectionName.includes('comparison') || sectionName.includes('signature')) {
+          matchedDim = dims.find(d => d.id === 'completeness');
+        }
+      }
+
+      if (matchedDim) {
+        matchedDim.score = Math.max(0, matchedDim.score - pts);
+        // Put the details in the dim explanation
+        if (!matchedDim.details.some(d => d.includes(ded.reason))) {
+          matchedDim.details.unshift(`Deficiency identified: ${ded.reason} (-${pts} pts). Remarks: ${ded.remarks || ded.suggested_improvement}`);
+        }
+      } else {
+        // Fallback: subtract from findings or impression
+        const fallback = dims.find(d => d.id === 'findings') || dims[0];
+        fallback.score = Math.max(0, fallback.score - pts);
+      }
+    });
+  }
+
+  // Force mathematical sum alignment with qualityScore
+  let currentSum = dims.reduce((acc, d) => acc + d.score, 0);
+  let discrepancy = currentSum - qualityScore;
+
+  if (discrepancy !== 0) {
+    const priorityOrder = ['findings', 'impression', 'procedure_details', 'clinical_history', 'patient_demographics', 'terminology', 'template', 'formatting', 'consistency', 'grammar', 'completeness'];
+    for (const id of priorityOrder) {
+      const target = dims.find(d => d.id === id);
+      if (target) {
+        if (discrepancy > 0) {
+          const subtract = Math.min(target.score, discrepancy);
+          target.score -= subtract;
+          discrepancy -= subtract;
+        } else if (discrepancy < 0) {
+          const add = Math.min(target.max_marks - target.score, Math.abs(discrepancy));
+          target.score += add;
+          discrepancy += add;
+        }
+      }
+      if (discrepancy === 0) break;
+    }
+  }
+
+  // Final greedy backup pass if any discrepancy remains
+  currentSum = dims.reduce((acc, d) => acc + d.score, 0);
+  discrepancy = currentSum - qualityScore;
+  if (discrepancy !== 0) {
+    for (const d of dims) {
+      if (discrepancy > 0) {
+        const subtract = Math.min(d.score, discrepancy);
+        d.score -= subtract;
+        discrepancy -= subtract;
+      } else if (discrepancy < 0) {
+        const add = Math.min(d.max_marks - d.score, Math.abs(discrepancy));
+        d.score += add;
+        discrepancy += add;
+      }
+      if (discrepancy === 0) break;
+    }
+  }
+
+  return dims;
+}
+
+/**
  * Normalizes raw LLM JSON response to guarantee 100% mathematical accuracy between score & deductions.
  */
 function normalizeAuditResult(parsed, requestedModality, originalReportText) {
@@ -211,22 +329,8 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
 
   const ai_corrected_report = parsed.ai_corrected_report ?? parsed.revised_report ?? originalReportText;
 
-  // GUARANTEE ALL 11 ACR DIMENSIONS WITH MATHEMATICALLY ALIGNED SCORES (SUM = EXACTLY 100 MARKS: 10+10+10+20+20+10+4+4+4+4+4)
-  const fullDefaultDimensions = [
-    { id: 'patient_demographics', name: 'Patient Demographics', weight: '10%', score: Math.min(10, Math.round(quality_score * 0.1)), max_marks: 10, details: ['Patient Name, MRN, DOB, Age, Gender, and Study Date evaluated.'] },
-    { id: 'clinical_history', name: 'Clinical History / Indication', weight: '10%', score: Math.min(10, Math.round(quality_score * 0.1)), max_marks: 10, details: ['Chief complaint, indication, and clinical diagnostic question evaluated.'] },
-    { id: 'procedure_details', name: 'Procedure Details', weight: '10%', score: Math.min(10, Math.round(quality_score * 0.1)), max_marks: 10, details: ['Imaging technique, pulse sequences, and contrast dosage evaluated.'] },
-    { id: 'findings', name: 'Findings', weight: '20%', score: Math.min(20, Math.round(quality_score * 0.2)), max_marks: 20, details: ['Detailed anatomical observation and lesion measurements.'] },
-    { id: 'impression', name: 'Impression / Conclusion', weight: '20%', score: Math.min(20, Math.round(quality_score * 0.2)), max_marks: 20, details: ['Summary diagnostic impression and clinical recommendations.'] },
-    { id: 'terminology', name: 'Medical Terminology', weight: '10%', score: Math.min(10, Math.round(quality_score * 0.1)), max_marks: 10, details: ['RadLex terminology precision and quantitative metrics.'] },
-    { id: 'template', name: 'Template Compliance', weight: '4%', score: Math.min(4, Math.round(quality_score * 0.04)), max_marks: 4, details: ['ACR 7-section structured section headers.'] },
-    { id: 'formatting', name: 'Formatting & Structure', weight: '4%', score: Math.min(4, Math.round(quality_score * 0.04)), max_marks: 4, details: ['Paragraph legibility and spacing.'] },
-    { id: 'consistency', name: 'Consistency (Findings vs Impression)', weight: '4%', score: Math.min(4, Math.round(quality_score * 0.04)), max_marks: 4, details: ['Right vs Left laterality agreement between sections.'] },
-    { id: 'grammar', name: 'Grammar & Documentation Quality', weight: '4%', score: Math.min(4, Math.round(quality_score * 0.04)), max_marks: 4, details: ['Absence of typos or template errors.'] },
-    { id: 'completeness', name: 'Overall Clinical Completeness', weight: '4%', score: Math.min(4, Math.round(quality_score * 0.04)), max_marks: 4, details: ['Comparison study and radiologist signature.'] }
-  ];
-
-  let dimensions = Array.isArray(parsed.dimensions) && parsed.dimensions.length >= 11 ? parsed.dimensions : fullDefaultDimensions;
+  // Recalculate dimensions dynamically using the locked mathematical formula
+  const dimensions = calculateDimensionScores(quality_score, deductions_log);
 
   return {
     audit_id: `RAD-QA-2026-${Math.floor(1000 + Math.random() * 9000)}`,
