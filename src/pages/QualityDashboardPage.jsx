@@ -19,12 +19,6 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
   const [expandedDim, setExpandedDim] = useState(null);
   const [showScoringGuide, setShowScoringGuide] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
-
-  // Versions state simulation
-  const [versions, setVersions] = useState([
-    { id: 'v1', name: 'Version 1 (Original Upload)', timestamp: 'Today, 13:45 PM', author: 'Uploaded File', score: auditResult?.quality_score || 0, text: reportText || '', status: 'Draft' },
-    { id: 'v2', name: 'Version 2 (AI Corrected ACR Standard)', timestamp: 'Today, 13:46 PM', author: 'RadAudit Engine', score: 98, text: auditResult?.ai_corrected_report || reportText || '', status: 'Suggested' },
-  ]);
   const [activeVersionId, setActiveVersionId] = useState('v1');
 
   if (!auditResult) {
@@ -44,13 +38,22 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
   const res = auditResult;
   const gradeInfo = getScoreGrade(res.quality_score);
 
+  // Dynamically resolve original and corrected report text so it is NEVER blank
+  const effectiveOriginalText = reportText || res.original_report_text || res.report_text || res.reportText || '';
+  const effectiveCorrectedText = res.ai_corrected_report || res.revised_report || effectiveOriginalText;
+
+  const versionList = [
+    { id: 'v1', name: 'Version 1 (Original Upload)', timestamp: 'Original Study', author: 'Uploaded Report', score: res.quality_score || 0, text: effectiveOriginalText, status: 'Draft' },
+    { id: 'v2', name: 'Version 2 (AI Corrected ACR Standard)', timestamp: 'AI Evaluation', author: 'RadAudit Engine', score: 98, text: effectiveCorrectedText, status: 'Suggested' },
+  ];
+
   const handleRestoreVersion = (ver) => {
     setActiveVersionId(ver.id);
-    setReportText(ver.text);
+    if (setReportText) setReportText(ver.text);
   };
 
   const handleApproveVersion = (ver) => {
-    setVersions(versions.map(v => v.id === ver.id ? { ...v, status: 'Approved' } : v));
+    ver.status = 'Approved';
   };
 
   return (
@@ -81,7 +84,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
 
       <AICautionNotice />
 
-      {/* Sub-View Navigation Tabs (Grammarly tab removed as requested) */}
+      {/* Sub-View Navigation Tabs */}
       <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
         {[
           { id: 'overview', label: '11-Dimension Overview', icon: BarChart3 },
@@ -129,7 +132,7 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                   </div>
                   <ul style={{ paddingLeft: '16px', margin: 0, color: '#334155' }}>
                     <li><strong>Findings Section (20 Marks / 20%)</strong>: Detailed lesion size, anatomical location, and organ observations.</li>
-                    <li><strong>Impression / Conclusion (20 Marks / 20%)</strong>: Definitive diagnostic summary & actionable clinical recommendations.</li>
+                    <li><strong>Impression / Conclusion (20 Marks / 20%)</strong>: Summary of key diagnostic findings, differential diagnoses, and actionable clinical recommendations.</li>
                     <li><strong>Patient Demographics (10 Marks / 10%)</strong>: Name, MRN, DOB, Age, Gender, and Study Date.</li>
                     <li><strong>Clinical History (10 Marks / 10%)</strong>: Chief complaint, symptoms, and clinical question.</li>
                     <li><strong>Procedure Details (10 Marks / 10%)</strong>: Technique, contrast agent, pulse sequences, slice thickness.</li>
@@ -386,16 +389,16 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
       {/* TAB 2: SIDE-BY-SIDE DIFF VIEW */}
       {activeTab === 'diff' && (
         <ReportDiffView
-          originalText={reportText}
-          correctedText={res.ai_corrected_report}
-          onApplyCorrection={(txt) => setReportText(txt)}
+          originalText={effectiveOriginalText}
+          correctedText={effectiveCorrectedText}
+          onApplyCorrection={(txt) => setReportText && setReportText(txt)}
         />
       )}
 
       {/* TAB 3: VERSION HISTORY */}
       {activeTab === 'versions' && (
         <VersionHistoryDrawer
-          versions={versions}
+          versions={versionList}
           activeVersionId={activeVersionId}
           onRestoreVersion={handleRestoreVersion}
           onApproveVersion={handleApproveVersion}
