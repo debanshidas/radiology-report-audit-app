@@ -1,42 +1,38 @@
 import React, { useState } from 'react';
-import { FileText, Download, Check, FileCode, ShieldCheck } from 'lucide-react';
+import { Download, FileText, CheckCircle2, BookOpen, Sparkles, FileCode } from 'lucide-react';
 import AICautionNotice from '../components/AICautionNotice';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { downloadPdfBlob, downloadDocxBlob } from '../utils/downloadHelper';
 
 const TEMPLATES = [
   {
     id: 'chest_xray',
-    name: 'Chest X-Ray (PA & Lateral)',
+    name: 'Standard Chest Radiograph (PA & Lateral)',
     modality: 'Chest X-Ray',
-    desc: 'Standard ACR practice parameter template for frontal and lateral chest radiographs evaluating cardiopulmonary structures.',
-    sections: ['Patient Demographics', 'Clinical Indication', 'Procedure Details', 'Comparison', 'Findings', 'Impression', 'Signature'],
+    desc: 'Standardized 7-section ACR template for routine outpatient and emergency room chest radiograph reporting.',
+    sections: ['Demographics', 'Indication', 'Technique', 'Comparison', 'Findings', 'Impression', 'Signature'],
   },
   {
     id: 'brain_mri',
-    name: 'Brain MRI (Multisequence)',
+    name: 'Brain MRI (Routine Neuro protocol)',
     modality: 'Brain MRI',
-    desc: 'High-field MRI protocol template with FLAIR, DWI, T1, and T2 sequences for evaluating neurological and ischemic pathology.',
-    sections: ['Demographics', 'Indication', 'Technique / Contrast', 'Comparison', 'Parenchyma & Ventricles', 'Impression', 'Signature'],
+    desc: 'Multi-sequence MRI template evaluating parenchymal signal intensity, ventricular system, extra-axial spaces, and diffusion weighted imaging.',
+    sections: ['Demographics', 'Indication', 'Pulse Sequences & Contrast', 'Comparison', 'Brain Parenchyma', 'Ventacles & Vessels', 'Impression'],
   },
   {
     id: 'abdomen_ct',
-    name: 'Abdomen & Pelvis CT',
+    name: 'Abdomen & Pelvis CT with IV Contrast',
     modality: 'Abdomen CT',
-    desc: 'Contrast-enhanced CT template evaluating solid organs, bowel loops, appendix, vasculature, and retroperitoneum.',
-    sections: ['Demographics', 'Indication', 'Contrast Protocol', 'Comparison', 'Organ-System Findings', 'Impression', 'Signature'],
+    desc: 'Multi-organ abdominal CT protocol evaluating solid organs (liver, spleen, pancreas, kidneys), bowel, mesentery, retroperitoneum, and vasculature.',
+    sections: ['Demographics', 'Indication', 'Technique & Contrast Volume', 'Solid Organs', 'Bowel & Peritoneum', 'Vascular & Bones', 'Impression'],
   },
   {
     id: 'spine_mri',
-    name: 'Lumbar / Cervical Spine MRI',
+    name: 'Lumbar Spine MRI (Degenerative & Disc)',
     modality: 'Spine MRI',
-    desc: 'Detailed spinal imaging template evaluating vertebral alignment, disc spaces, neural foramina, and nerve root compression.',
-    sections: ['Demographics', 'Indication', 'Sequences', 'Alignment & Marrow', 'Level-by-Level Discs', 'Impression', 'Signature'],
-  },
-  {
-    id: 'ultrasound',
-    name: 'Abdominal / Pelvic Ultrasound',
-    modality: 'Ultrasound',
-    desc: 'Sonographic reporting template for gallbladder, liver, pancreas, kidneys, and pelvic structures with Doppler findings.',
-    sections: ['Demographics', 'Indication', 'Transducer Protocol', 'Gallbladder & Liver', 'Impression', 'Signature'],
+    desc: 'Structured spinal MRI template reporting intervertebral disc height, canal stenosis, neural foraminal narrowing, and spinal cord signal.',
+    sections: ['Demographics', 'Indication', 'Sequences', 'Alignment & Bones', 'Level-by-Level Disc & Foramina', 'Impression'],
   },
   {
     id: 'mammography',
@@ -68,19 +64,112 @@ const TEMPLATES = [
   },
 ];
 
+const generateTemplateText = (template) => {
+  return `AMERICAN COLLEGE OF RADIOLOGY (ACR) STANDARDIZED TEMPLATE
+Exam Modality: ${template.modality}
+Template Name: ${template.name}
+Compliance Level: ACR 7-Section Practice Parameter Standard
+
+PATIENT DEMOGRAPHICS:
+Patient Name: [Last Name, First Name]
+MRN: [Medical Record Number]
+DOB / Age / Gender: [MM/DD/YYYY / Age / M/F]
+Date of Service: [MM/DD/YYYY]
+Accession Number: [10-Digit Accession ID]
+
+CLINICAL INDICATION / HISTORY:
+[Chief complaint, clinical symptoms, and primary diagnostic question to be evaluated.]
+
+PROCEDURE DETAILS / TECHNIQUE:
+[Modality technique details, slice thickness, pulse sequences, IV/Oral contrast agent type and volume.]
+
+COMPARISON STUDY:
+[Prior imaging study date and modality, or "None available for comparison."]
+
+FINDINGS:
+[Systematic anatomical observations by organ site/region:]
+- Organ System / Primary Region: [Detailed description of normal structures and abnormal findings with quantitative measurements.]
+- Secondary Regions: [Evaluation of adjacent tissues, lymph nodes, and vascular structures.]
+
+IMPRESSION / CONCLUSION:
+1. [Definitive primary diagnostic finding and conclusion.]
+2. [Secondary findings and actionable clinical management recommendations.]
+
+REPORTING RADIOLOGIST:
+[Radiologist Name, MD / DNB]
+Board Certified Radiologist
+Date Signed: [MM/DD/YYYY]`;
+};
+
 export default function ReportTemplatesPage() {
   const [downloadingKey, setDownloadingKey] = useState(null);
 
-  const handleDownload = (template, format) => {
-    const url = `/api/download-template?modality=${encodeURIComponent(template.modality)}&format=${format}`;
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `ACR_Template_${template.modality.replace(/\s+/g, '_')}.${format}`);
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(() => {
-      document.body.removeChild(link);
-    }, 200);
+  const handleDownload = async (template, format) => {
+    const key = `${template.id}_${format}`;
+    setDownloadingKey(key);
+
+    const templateText = generateTemplateText(template);
+    const filename = `ACR_Template_${template.modality.replace(/\s+/g, '_')}.${format}`;
+
+    try {
+      if (format === 'pdf') {
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        
+        // Header Banner
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 26, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text('ACR STANDARDIZED RADIOLOGY REPORT TEMPLATE', 14, 13);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(186, 230, 253);
+        doc.text(`Modality: ${template.modality} • ${template.name}`, 14, 20);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(255, 255, 255);
+        doc.text('ACR COMPLIANT', 196, 16, { align: 'right' });
+
+        // Body Text Table Container
+        autoTable(doc, {
+          startY: 32,
+          body: [[templateText]],
+          theme: 'plain',
+          bodyStyles: {
+            fontSize: 8.5,
+            font: 'courier',
+            textColor: [15, 23, 42],
+            fillColor: [248, 250, 252],
+            cellPadding: 8
+          },
+          margin: { left: 14, right: 14 }
+        });
+
+        // Footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.setTextColor(100, 116, 139);
+          doc.text(`Page ${i} of ${pageCount} • RadAudit Enterprise Template Repository`, 14, 287);
+        }
+
+        const pdfBlob = doc.output('blob');
+        downloadPdfBlob(pdfBlob, filename);
+      } else if (format === 'docx' || format === 'txt') {
+        const textBlob = new Blob([templateText], { type: 'text/plain;charset=utf-8' });
+        downloadDocxBlob(textBlob, filename);
+      }
+    } catch (err) {
+      alert('Template Download Error: ' + err.message);
+    } finally {
+      setTimeout(() => setDownloadingKey(null), 400);
+    }
   };
 
   return (
@@ -92,7 +181,7 @@ export default function ReportTemplatesPage() {
           ACR Standardized Report Template Library
         </h1>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '3px 0 0' }}>
-          Download ACR & RadLex compliant radiology reporting templates for clinical documentation
+          Download ACR & RadLex compliant radiology reporting templates directly in PDF, DOCX, or TXT format
         </p>
       </div>
 
