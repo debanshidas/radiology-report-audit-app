@@ -136,8 +136,8 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
                     <li><strong>Clinical History (10 Marks / 10%)</strong>: Chief complaint, symptoms, and clinical question.</li>
                     <li><strong>Procedure Details (10 Marks / 10%)</strong>: Technique, contrast agent, pulse sequences, slice thickness.</li>
                     <li><strong>Medical Terminology (10 Marks / 10%)</strong>: RadLex vocabulary precision, quantitative metrics.</li>
-                    <li><strong>Template Compliance (10 Marks / 10%)</strong>: ACR 7-section structured headers.</li>
-                    <li><strong>Formatting, Consistency & Grammar (15 Marks / 15%)</strong>: Paragraph spacing, laterality agreement (right vs left), and completeness.</li>
+                    <li><strong>Template Compliance (5 Marks / 5%)</strong>: ACR 7-section structured headers.</li>
+                    <li><strong>Formatting, Consistency, Grammar & Completeness (15 Marks / 15%)</strong>: 5 marks each for Spacing, Laterality Agreement, Typos, and Comparison Study.</li>
                   </ul>
                 </div>
 

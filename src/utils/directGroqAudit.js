@@ -43,7 +43,7 @@ Required JSON Output Schema:
     { "id": "findings", "name": "Findings", "weight": "20%", "score": 20, "max_marks": 20, "details": ["Anatomical observations and lesion measurements."] },
     { "id": "impression", "name": "Impression / Conclusion", "weight": "20%", "score": 20, "max_marks": 20, "details": ["Diagnostic summary and clinical recommendations."] },
     { "id": "terminology", "name": "Medical Terminology", "weight": "10%", "score": 10, "max_marks": 10, "details": ["RadLex terminology precision."] },
-    { "id": "template", "name": "Template Compliance", "weight": "10%", "score": 10, "max_marks": 10, "details": ["ACR 7-section structured headers."] },
+    { "id": "template", "name": "Template Compliance", "weight": "5%", "score": 5, "max_marks": 5, "details": ["ACR 7-section structured headers."] },
     { "id": "formatting", "name": "Formatting & Structure", "weight": "5%", "score": 5, "max_marks": 5, "details": ["Paragraph legibility."] },
     { "id": "consistency", "name": "Consistency (Findings vs Impression)", "weight": "5%", "score": 5, "max_marks": 5, "details": ["Laterality agreement."] },
     { "id": "grammar", "name": "Grammar & Documentation Quality", "weight": "5%", "score": 5, "max_marks": 5, "details": ["Absence of typos."] },
@@ -211,7 +211,7 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
 
   const ai_corrected_report = parsed.ai_corrected_report ?? parsed.revised_report ?? originalReportText;
 
-  // GUARANTEE ALL 11 ACR DIMENSIONS WITH MATHEMATICALLY ALIGNED SCORES
+  // GUARANTEE ALL 11 ACR DIMENSIONS WITH MATHEMATICALLY ALIGNED SCORES (SUM = EXACTLY 100 MARKS)
   const fullDefaultDimensions = [
     { id: 'patient_demographics', name: 'Patient Demographics', weight: '10%', score: Math.min(10, Math.round(quality_score * 0.1)), max_marks: 10, details: ['Patient Name, MRN, DOB, Age, Gender, and Study Date evaluated.'] },
     { id: 'clinical_history', name: 'Clinical History / Indication', weight: '10%', score: Math.min(10, Math.round(quality_score * 0.1)), max_marks: 10, details: ['Chief complaint, indication, and clinical diagnostic question evaluated.'] },
@@ -219,7 +219,7 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
     { id: 'findings', name: 'Findings', weight: '20%', score: Math.min(20, Math.round(quality_score * 0.2)), max_marks: 20, details: ['Detailed anatomical observation and lesion measurements.'] },
     { id: 'impression', name: 'Impression / Conclusion', weight: '20%', score: Math.min(20, Math.round(quality_score * 0.2)), max_marks: 20, details: ['Summary diagnostic impression and clinical recommendations.'] },
     { id: 'terminology', name: 'Medical Terminology', weight: '10%', score: Math.min(10, Math.round(quality_score * 0.1)), max_marks: 10, details: ['RadLex terminology precision and quantitative metrics.'] },
-    { id: 'template', name: 'Template Compliance', weight: '10%', score: Math.min(10, Math.round(quality_score * 0.1)), max_marks: 10, details: ['ACR 7-section structured section headers.'] },
+    { id: 'template', name: 'Template Compliance', weight: '5%', score: Math.min(5, Math.round(quality_score * 0.05)), max_marks: 5, details: ['ACR 7-section structured section headers.'] },
     { id: 'formatting', name: 'Formatting & Structure', weight: '5%', score: Math.min(5, Math.round(quality_score * 0.05)), max_marks: 5, details: ['Paragraph legibility and spacing.'] },
     { id: 'consistency', name: 'Consistency (Findings vs Impression)', weight: '5%', score: Math.min(5, Math.round(quality_score * 0.05)), max_marks: 5, details: ['Right vs Left laterality agreement between sections.'] },
     { id: 'grammar', name: 'Grammar & Documentation Quality', weight: '5%', score: Math.min(5, Math.round(quality_score * 0.05)), max_marks: 5, details: ['Absence of typos or template errors.'] },
