@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowUp } from 'lucide-react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
@@ -38,6 +39,9 @@ export default function App() {
   const [analysisError, setAnalysisError] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const mainRef = useRef(null);
 
   const [historyItems, setHistoryItems] = useState(() => {
     try {
@@ -67,6 +71,21 @@ export default function App() {
     const interval = setInterval(checkServer, 10000);
     return () => clearInterval(interval);
   }, [provider]);
+
+  // Monitor main container scrolling to toggle Scroll-to-Top button
+  const handleMainScroll = (e) => {
+    if (e.target.scrollTop > 200) {
+      setShowScrollTop(true);
+    } else {
+      setShowScrollTop(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const handleStartAudit = async () => {
     setActivePage('analysis');
@@ -127,13 +146,10 @@ export default function App() {
           data.readiness_status = data.readiness;
         }
 
-        // Attach original report text directly to auditResult object
         data.original_report_text = reportText;
-
         setAuditResult(data);
         if (data.effective_modality) setModality(data.effective_modality);
 
-        // Save to history
         const newItem = {
           id: 'audit_' + Date.now(),
           timestamp: new Date().toISOString(),
@@ -178,7 +194,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-app)' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: 'var(--bg-app)' }}>
       <Sidebar
         activePage={activePage}
         setActivePage={setActivePage}
@@ -188,7 +204,7 @@ export default function App() {
         auditCount={historyItems.length}
       />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
         <Header
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
@@ -199,7 +215,11 @@ export default function App() {
           serverConnected={serverConnected}
         />
 
-        <main style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        <main
+          ref={mainRef}
+          onScroll={handleMainScroll}
+          style={{ flex: 1, padding: '24px', overflowY: 'auto', position: 'relative' }}
+        >
           <div>
             {activePage === 'dashboard' && <DashboardPage setActivePage={setActivePage} setReportText={setReportText} serverConnected={serverConnected} />}
             {activePage === 'upload' && <UploadPage reportText={reportText} setReportText={setReportText} modality={modality} setModality={setModality} mandatorySections={mandatorySections} setMandatorySections={setMandatorySections} onStartAudit={handleStartAudit} isLoading={isAnalyzing} />}
@@ -216,6 +236,25 @@ export default function App() {
             {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} serverConnected={serverConnected} setServerConnected={setServerConnected} provider={provider} setProvider={setProvider} />}
             {activePage === 'about' && <AboutPage />}
           </div>
+
+          {/* Floating Scroll to Top Button */}
+          {showScrollTop && (
+            <button
+              onClick={scrollToTop}
+              title="Scroll to Top"
+              style={{
+                position: 'fixed', bottom: '32px', right: '32px', zIndex: 999,
+                width: '44px', height: '44px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #0284C7, #0D9488)', color: '#FFFFFF',
+                border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 14px rgba(2,132,199,0.4)', transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              <ArrowUp size={20} />
+            </button>
+          )}
         </main>
 
         <Footer />
