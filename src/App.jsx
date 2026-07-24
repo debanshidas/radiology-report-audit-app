@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import Header from './components/Header';
 import { apiFetch } from './utils/apiClient';
+import { directGroqAudit } from './utils/directGroqAudit';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
 import ReportViewer from './components/ReportViewer';
@@ -78,6 +79,9 @@ export default function App() {
     setTimeout(() => setCurrentStep(2), 600);
     setTimeout(() => setCurrentStep(3), 1200);
 
+    let data;
+    let isSuccess = false;
+
     try {
       const response = await apiFetch('/api/analyze', {
         method: 'POST',
@@ -88,44 +92,68 @@ export default function App() {
           provider: provider,
         })
       });
-      const data = await response.json();
-
-      setTimeout(() => setCurrentStep(4), 1800);
-      setTimeout(() => setCurrentStep(5), 2400);
-
-      setTimeout(() => {
-        if (response.ok && data.quality_score !== undefined) {
-          setAuditResult(data);
-          if (data.effective_modality) setModality(data.effective_modality);
-
-          // Save to history
-          const newItem = {
-            id: 'audit_' + Date.now(),
-            timestamp: new Date().toISOString(),
-            report_title: reportText.substring(0, 45).split('\n')[0] || 'Radiology Report',
-            modality: data.effective_modality || modality || 'Chest X-Ray',
-            quality_score: data.quality_score,
-            readiness_status: data.readiness_status,
-            audit_result: data
-          };
-          setHistoryItems(prev => {
-            const updated = [newItem, ...prev];
-            localStorage.setItem('rad_audit_history', JSON.stringify(updated));
-            return updated;
-          });
-        } else {
-          setAnalysisError(data.error || 'The audit could not be completed. Please try again.');
-        }
-        setCurrentStep(6);
-        setIsAnalyzing(false);
-      }, 3200);
-    } catch {
-      setTimeout(() => {
-        setAnalysisError('Could not reach the audit service. Start the Flask server and try again.');
-        setIsAnalyzing(false);
-        setCurrentStep(6);
-      }, 2500);
+      data = await response.json();
+      if (response.ok && data.quality_score !== undefined) {
+        isSuccess = true;
+      }
+    } catch (err) {
+      // Backend offline fallback to direct AI audit
     }
+
+    if (!isSuccess) {
+      try {
+        data = await directGroqAudit({
+          report_text: reportText,
+          modality,
+          mandatory_sections: mandatorySections,
+          provider,
+        });
+        isSuccess = true;
+      } catch (directErr) {
+        setTimeout(() => {
+          setAnalysisError(directErr.message || 'Audit failed. Check your API key in Settings.');
+          setIsAnalyzing(false);
+          setCurrentStep(6);
+        }, 1500);
+        return;
+      }
+    }
+
+    setTimeout(() => setCurrentStep(4), 1800);
+    setTimeout(() => setCurrentStep(5), 2400);
+
+    setTimeout(() => {
+      if (isSuccess && data && (data.quality_score !== undefined || data.overall_score !== undefined)) {
+        // Normalize schema if needed
+        if (data.quality_score === undefined && data.overall_score !== undefined) {
+          data.quality_score = data.overall_score;
+          data.readiness_status = data.readiness;
+        }
+
+        setAuditResult(data);
+        if (data.effective_modality) setModality(data.effective_modality);
+
+        // Save to history
+        const newItem = {
+          id: 'audit_' + Date.now(),
+          timestamp: new Date().toISOString(),
+          report_title: reportText.substring(0, 45).split('\n')[0] || 'Radiology Report',
+          modality: data.effective_modality || modality || 'Chest X-Ray',
+          quality_score: data.quality_score,
+          readiness_status: data.readiness_status,
+          audit_result: data
+        };
+        setHistoryItems(prev => {
+          const updated = [newItem, ...prev];
+          localStorage.setItem('rad_audit_history', JSON.stringify(updated));
+          return updated;
+        });
+      } else {
+        setAnalysisError(data?.error || 'The audit could not be completed. Please try again.');
+      }
+      setCurrentStep(6);
+      setIsAnalyzing(false);
+    }, 3200);
   };
 
   if (currentView === 'landing') {

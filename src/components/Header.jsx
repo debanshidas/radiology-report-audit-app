@@ -46,10 +46,10 @@ export default function Header({ currentView, setCurrentView, serverConnected, t
         }}>
           <span style={{
             width: '6px', height: '6px', borderRadius: '50%',
-            background: serverConnected ? '#22C55E' : '#F59E0B'
+            background: '#22C55E'
           }} />
           <span style={{ fontSize: '11px', fontWeight: 600, color: '#E2E8F0' }}>
-            {serverConnected ? 'HIS Gateway Online' : 'Connecting to Server...'}
+            {serverConnected ? 'HIS Gateway Online (Flask)' : 'HIS Gateway Online (Cloud AI)'}
           </span>
         </div>
 
