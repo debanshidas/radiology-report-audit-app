@@ -46,7 +46,7 @@ export default function Header({ sidebarCollapsed, setSidebarCollapsed, theme, s
           </div>
           <div>
             <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.2px', lineHeight: 1.1 }}>
-              RadAudit <span style={{ fontSize: '10px', color: '#3FBBC0', fontWeight: 700, marginLeft: '4px' }}>MediCare Enterprise</span>
+              RadAudit <span style={{ fontSize: '10px', color: '#3FBBC0', fontWeight: 700, marginLeft: '4px' }}>Enterprise QA</span>
             </div>
             <div style={{ fontSize: '10px', color: '#B2C7DB', marginTop: '1px' }}>
               ACR Clinical Quality Assurance Gateway

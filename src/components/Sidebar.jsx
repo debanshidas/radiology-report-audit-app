@@ -246,7 +246,7 @@ export default function Sidebar({ activePage, setActivePage, collapsed, setColla
               whiteSpace: 'nowrap'
             }}
           >
-            <div style={{ fontWeight: 700, color: '#FFFFFF' }}>RadAudit MediCare Gateway</div>
+            <div style={{ fontWeight: 700, color: '#FFFFFF' }}>RadAudit QA Gateway</div>
             <div style={{ color: '#3FBBC0', marginTop: '3px' }}>ACR Standard Audit v3.2</div>
           </motion.div>
         )}

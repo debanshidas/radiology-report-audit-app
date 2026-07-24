@@ -147,7 +147,7 @@ export default function LandingPage({ onLaunchApp }) {
               <ShieldCheck size={20} />
             </div>
             <span style={{ fontSize: '16px', fontWeight: 800, color: '#2C4964', letterSpacing: '-0.3px' }}>
-              RadAudit <span style={{ color: '#3FBBC0', fontWeight: 700, fontSize: '12px' }}>MediCare AI</span>
+              RadAudit <span style={{ color: '#3FBBC0', fontWeight: 700, fontSize: '12px' }}>Clinical AI</span>
             </span>
           </div>
           <div style={{ fontSize: '12px', fontWeight: 600, color: '#6C757D', display: 'flex', alignItems: 'center', gap: '6px' }}>
