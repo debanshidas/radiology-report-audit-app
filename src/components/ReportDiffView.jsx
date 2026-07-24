@@ -1,8 +1,9 @@
 import React from 'react';
 import { ArrowLeftRight, CheckCircle2, FileText, Sparkles, Copy } from 'lucide-react';
 
-export default function ReportDiffView({ originalText, correctedText, onApplyCorrection }) {
-  if (!originalText) return null;
+export default function ReportDiffView({ originalText = '', correctedText = '', onApplyCorrection }) {
+  const sourceText = originalText || 'No original report text available for diff inspection.';
+  const revisedText = correctedText || sourceText;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -23,7 +24,7 @@ export default function ReportDiffView({ originalText, correctedText, onApplyCor
 
         {onApplyCorrection && (
           <button
-            onClick={() => onApplyCorrection(correctedText)}
+            onClick={() => onApplyCorrection(revisedText)}
             className="btn-primary"
             style={{ fontSize: '11.5px', padding: '6px 12px' }}
           >
@@ -51,7 +52,7 @@ export default function ReportDiffView({ originalText, correctedText, onApplyCor
             background: 'var(--surface)', color: 'var(--text-primary)', whiteSpace: 'pre-wrap',
             maxHeight: '520px', overflowY: 'auto'
           }}>
-            {originalText}
+            {sourceText}
           </div>
         </div>
 
@@ -71,7 +72,7 @@ export default function ReportDiffView({ originalText, correctedText, onApplyCor
             background: 'var(--surface)', color: 'var(--text-primary)', whiteSpace: 'pre-wrap',
             maxHeight: '520px', overflowY: 'auto'
           }}>
-            {correctedText || originalText}
+            {revisedText}
           </div>
         </div>
 

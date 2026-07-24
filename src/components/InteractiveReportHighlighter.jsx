@@ -1,75 +1,120 @@
 import React, { useState } from 'react';
-import { AlertCircle, X, CheckCircle2, Info, Lightbulb } from 'lucide-react';
+import { AlertCircle, X, CheckCircle2, Info, Lightbulb, FileText } from 'lucide-react';
 
-export default function InteractiveReportHighlighter({ reportText, highlights = [] }) {
+export default function InteractiveReportHighlighter({ reportText = '', highlights = [] }) {
   const [activeHighlight, setActiveHighlight] = useState(null);
 
-  if (!reportText) return null;
+  const displayText = reportText || 'No clinical report text available for inspection.';
 
-  // Build text chunks with highlight spans
+  // Build text chunks with highlight spans safely
   const renderTextWithHighlights = () => {
-    if (!highlights || highlights.length === 0) {
-      return <span>{reportText}</span>;
+    if (!displayText || !Array.isArray(highlights) || highlights.length === 0) {
+      return <span>{displayText}</span>;
     }
 
-    const elements = [];
-    let lastIndex = 0;
+    try {
+      // Process highlights and calculate valid start/end offsets
+      const validHighlights = highlights
+        .map((hl, idx) => {
+          let start = typeof hl.start === 'number' ? hl.start : -1;
+          let end = typeof hl.end === 'number' ? hl.end : -1;
 
-    highlights.forEach((hl, idx) => {
-      // Add plain text before highlight
-      if (hl.start > lastIndex) {
+          if ((start < 0 || end < 0) && hl.text) {
+            const foundIdx = displayText.toLowerCase().indexOf(hl.text.toLowerCase());
+            if (foundIdx >= 0) {
+              start = foundIdx;
+              end = foundIdx + hl.text.length;
+            }
+          }
+
+          if (start >= 0 && end > start && end <= displayText.length) {
+            return {
+              id: hl.id || `hl_${idx}`,
+              start,
+              end,
+              type: hl.type || 'vague',
+              text: hl.text || displayText.substring(start, end),
+              reason: hl.explanation || hl.reason || 'Non-standard clinical phrasing',
+              clinical_impact: hl.clinical_impact || 'May cause diagnostic ambiguity or communication delay.',
+              suggested_improvement: hl.suggestion || hl.suggested_improvement || 'Use standard ACR terminology.',
+              severity: hl.severity || 'Medium',
+              deduction: hl.deduction || -5
+            };
+          }
+          return null;
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.start - b.start);
+
+      if (validHighlights.length === 0) {
+        return <span>{displayText}</span>;
+      }
+
+      const elements = [];
+      let lastIndex = 0;
+
+      validHighlights.forEach((hl, idx) => {
+        if (hl.start > lastIndex) {
+          elements.push(
+            <span key={`plain_${lastIndex}`}>
+              {displayText.substring(lastIndex, hl.start)}
+            </span>
+          );
+        }
+
+        const getHighlightStyle = (type) => {
+          switch (type) {
+            case 'contradiction':
+            case 'missing':
+              return { bg: '#FEE2E2', color: '#991B1B', border: '#FCA5A5' };
+            case 'terminology':
+              return { bg: '#FEF3C7', color: '#B45309', border: '#FDE68A' };
+            case 'formatting':
+              return { bg: '#E0F2FE', color: '#0369A1', border: '#BAE6FD' };
+            default:
+              return { bg: '#FFEDD5', color: '#C2410C', border: '#FDBA74' };
+          }
+        };
+
+        const style = getHighlightStyle(hl.type);
+        const isSelected = activeHighlight?.id === hl.id;
+
         elements.push(
-          <span key={`plain_${lastIndex}`}>
-            {reportText.substring(lastIndex, hl.start)}
+          <mark
+            key={hl.id || idx}
+            onClick={() => setActiveHighlight(hl)}
+            style={{
+              background: style.bg,
+              color: style.color,
+              borderBottom: `2px solid ${style.border}`,
+              padding: '2px 4px',
+              borderRadius: '3px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              outline: isSelected ? '2px solid #0284C7' : 'none',
+              transition: 'all 0.15s'
+            }}
+            title={`Click to view issue: ${hl.reason}`}
+          >
+            {displayText.substring(hl.start, hl.end)}
+          </mark>
+        );
+
+        lastIndex = hl.end;
+      });
+
+      if (lastIndex < displayText.length) {
+        elements.push(
+          <span key={`plain_end`}>
+            {displayText.substring(lastIndex)}
           </span>
         );
       }
 
-      const getHighlightStyle = (type) => {
-        switch (type) {
-          case 'contradiction': return { bg: '#FEE2E2', color: '#991B1B', border: '#FCA5A5' };
-          case 'terminology': return { bg: '#FEF3C7', color: '#B45309', border: '#FDE68A' };
-          case 'formatting': return { bg: '#E0F2FE', color: '#0369A1', border: '#BAE6FD' };
-          default: return { bg: '#FFEDD5', color: '#C2410C', border: '#FDBA74' };
-        }
-      };
-
-      const style = getHighlightStyle(hl.type);
-      const isSelected = activeHighlight?.id === hl.id;
-
-      elements.push(
-        <mark
-          key={hl.id || idx}
-          onClick={() => setActiveHighlight(hl)}
-          style={{
-            background: style.bg,
-            color: style.color,
-            borderBottom: `2px solid ${style.border}`,
-            padding: '2px 4px',
-            borderRadius: '3px',
-            cursor: 'pointer',
-            fontWeight: 600,
-            outline: isSelected ? '2px solid #0284C7' : 'none',
-            transition: 'all 0.15s'
-          }}
-          title={`Click to view issue: ${hl.reason}`}
-        >
-          {reportText.substring(hl.start, hl.end)}
-        </mark>
-      );
-
-      lastIndex = hl.end;
-    });
-
-    if (lastIndex < reportText.length) {
-      elements.push(
-        <span key={`plain_end`}>
-          {reportText.substring(lastIndex)}
-        </span>
-      );
+      return elements;
+    } catch (err) {
+      return <span>{displayText}</span>;
     }
-
-    return elements;
   };
 
   return (
@@ -82,12 +127,12 @@ export default function InteractiveReportHighlighter({ reportText, highlights = 
             Grammarly-Style Interactive Clinical Document Inspector
           </span>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            {highlights.length} highlighted issue(s) detected • Click highlight to inspect
+            {(highlights || []).length} highlighted issue(s) detected • Click highlight to inspect
           </span>
         </div>
 
         <div style={{
-          padding: '20px', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.8,
+          padding: '20px', fontFamily: 'monospace', fontSize: '12.5px', lineHeight: 1.8,
           background: 'var(--surface)', color: 'var(--text-primary)', whiteSpace: 'pre-wrap'
         }}>
           {renderTextWithHighlights()}
