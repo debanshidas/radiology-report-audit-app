@@ -296,21 +296,20 @@ export default function Sidebar({ activePage, setActivePage, collapsed, setColla
 
   // DESKTOP VIEW RENDERING
   return (
-    <motion.aside
-      variants={sidebarVariants}
-      animate={isExpanded ? 'expanded' : 'collapsed'}
-      initial={collapsed ? 'collapsed' : 'expanded'}
+    <aside
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
+        width: isExpanded ? '240px' : '60px',
         background: '#2C4964',
         borderRight: '1px solid #162C40',
         display: 'flex', flexDirection: 'column',
         flexShrink: 0, zIndex: 30, position: 'relative',
-        height: '100vh', overflow: 'hidden'
+        height: '100vh', overflow: 'hidden',
+        transition: 'width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1.0)'
       }}
     >
       {renderContent()}
-    </motion.aside>
+    </aside>
   );
 }

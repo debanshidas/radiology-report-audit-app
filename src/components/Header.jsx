@@ -9,7 +9,7 @@ export default function Header({ sidebarCollapsed, setSidebarCollapsed, theme, s
       borderBottom: '1px solid #162C40',
       display: 'flex',
       alignItems: 'center',
-      justify: 'space-between',
+      justifyContent: 'space-between',
       padding: '0 20px',
       color: '#FFFFFF',
       boxShadow: '0 2px 8px rgba(44, 73, 100, 0.15)',
