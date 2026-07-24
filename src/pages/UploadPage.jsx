@@ -31,29 +31,7 @@ export default function UploadPage({
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const [activeDemoCase, setActiveDemoCase] = useState(null);
 
-  // Automatic Modality Detection Hook
-  React.useEffect(() => {
-    if (!reportText || !reportText.trim()) return;
-    const txt = reportText.toLowerCase();
-
-    if (/flair|brain|intracranial|cerebral|head mri/i.test(txt)) {
-      setModality('Brain MRI'); setDetectionConfidence(98);
-    } else if (/lumbar|cervical|spine|l4-l5|l5-s1/i.test(txt)) {
-      setModality('Spine MRI'); setDetectionConfidence(95);
-    } else if (/appendic|abdomen|pelvis|liver|spleen|pancreas|gallbladder/i.test(txt)) {
-      setModality('Abdomen CT'); setDetectionConfidence(95);
-    } else if (/chest x-ray|chest radiograph|cxr|lungs|cardiomediastinal|pa and lateral/i.test(txt)) {
-      setModality('Chest X-Ray'); setDetectionConfidence(92);
-    } else if (/ultrasound|sonogram|echogenicity|gallbladder wall/i.test(txt)) {
-      setModality('Ultrasound'); setDetectionConfidence(90);
-    } else if (/mammogram|breast|bi-rads|tomosynthesis/i.test(txt)) {
-      setModality('Mammography'); setDetectionConfidence(95);
-    } else if (/pet-ct|fdg|suvmax|positron/i.test(txt)) {
-      setModality('PET-CT'); setDetectionConfidence(95);
-    } else if (/dexa|t-score|bone mineral density/i.test(txt)) {
-      setModality('DEXA Scan'); setDetectionConfidence(95);
-    }
-  }, [reportText, setModality]);
+  // Modality is set via demo case selection, dropdown picker, or file upload
 
   const charCount = reportText.length;
   const wordCount = reportText.trim() ? reportText.trim().split(/\s+/).length : 0;
