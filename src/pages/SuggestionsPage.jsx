@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lightbulb, Copy, Check, AlertTriangle, FileCheck2, FileText, ChevronDown, ChevronUp, Sparkles, MessageSquare, Shield } from 'lucide-react';
+import { Lightbulb, Copy, Check, AlertTriangle, FileCheck2, FileText, ChevronDown, ChevronUp, Sparkles, MessageSquare, Shield, BarChart3 } from 'lucide-react';
 
 export default function SuggestionsPage({ auditResult, reportText, setReportText, setActivePage }) {
   const [copiedIdx, setCopiedIdx] = useState(null);
@@ -68,11 +68,11 @@ export default function SuggestionsPage({ auditResult, reportText, setReportText
             <FileText size={14} /> {showOriginalReport ? 'Hide Original Report' : 'View Full Original Report'}
           </button>
           <button
-            onClick={() => setActivePage('report')}
+            onClick={() => setActivePage('quality')}
             className="btn-primary"
             style={{ fontSize: '12px', padding: '8px 16px' }}
           >
-            <FileCheck2 size={14} /> Generate PDF Report →
+            <BarChart3 size={14} /> View Quality Breakdown →
           </button>
         </div>
       </div>

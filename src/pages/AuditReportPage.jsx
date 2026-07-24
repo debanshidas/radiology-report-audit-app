@@ -79,7 +79,7 @@ export default function AuditReportPage({ auditResult, modality }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '840px', margin: '0 auto' }}>
 
-      {/* Page Title + Download */}
+      {/* Page Title */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
         <div>
           <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
@@ -89,13 +89,6 @@ export default function AuditReportPage({ auditResult, modality }) {
             Departmental quality record for HIS compliance logs
           </p>
         </div>
-        <button
-          onClick={handleDownload}
-          disabled={isDownloading}
-          className="btn-primary"
-        >
-          <Download size={14} /> {isDownloading ? 'Generating PDF...' : 'Download Certificate PDF'}
-        </button>
       </div>
 
       <AICautionNotice />

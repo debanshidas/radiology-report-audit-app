@@ -221,14 +221,6 @@ export default function AnalysisHistoryPage({ historyItems, setHistoryItems, onS
                           <Eye size={12} /> Inspect
                         </button>
                         <button
-                          onClick={() => handleDownloadPDF(item)}
-                          className="btn-outline"
-                          style={{ fontSize: '11px', padding: '4px 8px' }}
-                          title="Download PDF Certificate"
-                        >
-                          <Download size={12} /> PDF
-                        </button>
-                        <button
                           onClick={() => handleDelete(item.id)}
                           className="btn-destructive"
                           style={{ fontSize: '11px', padding: '4px 8px' }}

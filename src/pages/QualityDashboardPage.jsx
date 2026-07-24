@@ -70,14 +70,8 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => setShowScoringGuide(!showScoringGuide)} className="btn-secondary">
+          <button onClick={() => setShowScoringGuide(!showScoringGuide)} className="btn-primary">
             <HelpCircle size={13} /> {showScoringGuide ? 'Hide Scoring Rules' : 'How Marks Are Assigned'}
-          </button>
-          <button onClick={() => setIsPdfModalOpen(true)} className="btn-secondary">
-            <Eye size={13} /> Preview PDF Certificate
-          </button>
-          <button onClick={() => setActivePage('report')} className="btn-primary">
-            <FileCheck2 size={13} /> Download Certificate PDF
           </button>
         </div>
       </div>
