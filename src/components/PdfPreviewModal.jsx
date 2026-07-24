@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Download, X, Eye, FileText, Loader2 } from 'lucide-react';
 import { apiFetch } from '../utils/apiClient';
 import { downloadPdfBlob } from '../utils/downloadHelper';
+import { generateClientPdf } from '../utils/pdfGenerator';
 
 export default function PdfPreviewModal({ isOpen, onClose, auditResult, modality, filename = 'radiology_report.txt' }) {
   const [pdfUrl, setPdfUrl] = useState(null);
@@ -29,22 +30,45 @@ export default function PdfPreviewModal({ isOpen, onClose, auditResult, modality
           audit_result: auditResult
         })
       });
-      if (!resp.ok) throw new Error('PDF generation failed');
-      const blob = await resp.blob();
-      setPdfBlob(blob);
-      const url = URL.createObjectURL(blob);
-      setPdfUrl(url);
+      if (resp.ok) {
+        const blob = await resp.blob();
+        setPdfBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        setIsLoading(false);
+        return;
+      }
     } catch (e) {
-      alert('Error previewing PDF: ' + e.message);
+      // Server offline fallback
+    }
+
+    // Client-side fallback for GitHub Pages static hosting
+    try {
+      await generateClientPdf({
+        audit_result: auditResult,
+        modality: modality || auditResult?.effective_modality || 'Chest X-Ray',
+        report_text: auditResult?.original_report_text || '',
+        filename: `radiology_audit_${(modality || auditResult?.effective_modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`
+      });
+    } catch (clientErr) {
+      alert('Error previewing PDF: ' + clientErr.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDownload = () => {
-    if (!pdfBlob) return;
-    const fn = `radiology_audit_${(modality || auditResult?.effective_modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-    downloadPdfBlob(pdfBlob, fn);
+  const handleDownload = async () => {
+    if (pdfBlob) {
+      const fn = `radiology_audit_${(modality || auditResult?.effective_modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+      downloadPdfBlob(pdfBlob, fn);
+    } else {
+      await generateClientPdf({
+        audit_result: auditResult,
+        modality: modality || auditResult?.effective_modality || 'Chest X-Ray',
+        report_text: auditResult?.original_report_text || '',
+        filename: `radiology_audit_${(modality || auditResult?.effective_modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`
+      });
+    }
   };
 
   if (!isOpen) return null;

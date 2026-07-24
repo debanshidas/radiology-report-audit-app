@@ -50,12 +50,26 @@ export default function AnalysisHistoryPage({ historyItems, setHistoryItems, onS
           audit_result: item.audit_result
         })
       });
-      if (!resp.ok) throw new Error('Failed to generate PDF');
-      const blob = await resp.blob();
-      const fn = `radiology_audit_${(item.modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-      downloadPdfBlob(blob, fn);
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const fn = `radiology_audit_${(item.modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+        downloadPdfBlob(blob, fn);
+        return;
+      }
     } catch (e) {
-      alert('PDF Download Error: ' + e.message);
+      // Server offline fallback
+    }
+
+    // Client-side PDF fallback for GitHub Pages
+    try {
+      await generateClientPdf({
+        audit_result: item.audit_result,
+        modality: item.modality || 'Chest X-Ray',
+        report_text: item.audit_result?.original_report_text || item.report_title,
+        filename: `radiology_audit_${(item.modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`
+      });
+    } catch (clientErr) {
+      alert('PDF Download Error: ' + clientErr.message);
     }
   };
 

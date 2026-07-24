@@ -3,6 +3,7 @@ import { FileCheck2, Download, ShieldCheck, AlertCircle } from 'lucide-react';
 import { apiFetch } from '../utils/apiClient';
 import AICautionNotice from '../components/AICautionNotice';
 import { downloadPdfBlob } from '../utils/downloadHelper';
+import { generateClientPdf } from '../utils/pdfGenerator';
 
 export default function AuditReportPage({ auditResult, modality }) {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -27,12 +28,27 @@ export default function AuditReportPage({ auditResult, modality }) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: 'radiology_report.txt', modality: modality || res.effective_modality || 'Chest X-Ray', audit_result: res })
       });
-      if (!resp.ok) throw new Error('PDF generation failed');
-      const blob = await resp.blob();
-      const fn = `radiology_audit_${(modality || res.effective_modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-      downloadPdfBlob(blob, fn);
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const fn = `radiology_audit_${(modality || res.effective_modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+        downloadPdfBlob(blob, fn);
+        setIsDownloading(false);
+        return;
+      }
     } catch (e) {
-      alert('PDF Download Error: ' + e.message);
+      // Server offline fallback
+    }
+
+    // Fallback to client-side browser PDF generator
+    try {
+      await generateClientPdf({
+        audit_result: res,
+        modality: modality || res.effective_modality || 'Chest X-Ray',
+        report_text: reportText,
+        filename: `radiology_audit_${(modality || res.effective_modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`
+      });
+    } catch (clientErr) {
+      alert('PDF Download Error: ' + clientErr.message);
     } finally {
       setIsDownloading(false);
     }
