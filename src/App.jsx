@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
@@ -21,7 +22,7 @@ import { apiFetch } from './utils/apiClient';
 import { directGroqAudit } from './utils/directGroqAudit';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('app');
+  const [currentView, setCurrentView] = useState('landing');
   const [activePage, setActivePage] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
@@ -176,89 +177,103 @@ export default function App() {
     const resData = selectedItem.audit_result || selectedItem;
     const txt = resData.original_report_text || resData.report_text || selectedItem.report_title || '';
     if (txt) setReportText(txt);
-    setAuditResult(resData);
   };
 
   const activeReportText = reportText || auditResult?.original_report_text || auditResult?.report_text || '';
 
-  if (currentView === 'landing') {
-    return (
-      <LandingPage
-        onLaunchApp={() => setCurrentView('app')}
-        onOpenDoc={(doc) => {
-          setCurrentView('app');
-          setActivePage(doc);
-        }}
-      />
-    );
-  }
-
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: 'var(--bg-app)' }}>
-      <Sidebar
-        activePage={activePage}
-        setActivePage={setActivePage}
-        collapsed={sidebarCollapsed}
-        setCollapsed={setSidebarCollapsed}
-        serverConnected={serverConnected}
-        auditCount={historyItems.length}
-      />
-
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, height: '100vh', overflow: 'hidden' }}>
-        <Header
-          sidebarCollapsed={sidebarCollapsed}
-          setSidebarCollapsed={setSidebarCollapsed}
-          theme={theme}
-          setTheme={setTheme}
-          provider={provider}
-          setProvider={setProvider}
-          serverConnected={serverConnected}
-        />
-
-        <main
-          ref={mainRef}
-          onScroll={handleMainScroll}
-          style={{ flex: 1, minHeight: 0, padding: '24px', overflowY: 'auto', overflowX: 'hidden', position: 'relative', WebkitOverflowScrolling: 'touch' }}
+    <AnimatePresence mode="wait">
+      {currentView === 'landing' ? (
+        <motion.div
+          key="landing"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
         >
-          <div>
-            {activePage === 'dashboard' && <DashboardPage setActivePage={setActivePage} setReportText={setReportText} serverConnected={serverConnected} />}
-            {activePage === 'upload' && <UploadPage reportText={reportText} setReportText={setReportText} modality={modality} setModality={setModality} mandatorySections={mandatorySections} setMandatorySections={setMandatorySections} onStartAudit={handleStartAudit} isLoading={isAnalyzing} />}
-            {activePage === 'analysis' && <AnalysisPage isAnalyzing={isAnalyzing} currentStep={currentStep} auditResult={auditResult} analysisError={analysisError} setActivePage={setActivePage} provider={provider} />}
-            {activePage === 'quality' && <QualityDashboardPage auditResult={auditResult} reportText={activeReportText} setReportText={setReportText} setActivePage={setActivePage} />}
-            {activePage === 'suggestions' && <SuggestionsPage auditResult={auditResult} reportText={activeReportText} setReportText={setReportText} setActivePage={setActivePage} />}
-            {activePage === 'report' && <AuditReportPage auditResult={auditResult} reportText={activeReportText} modality={modality} />}
-            {activePage === 'viewer' && <ReportViewer reportText={activeReportText} auditResult={auditResult} />}
-            {activePage === 'history' && <AnalysisHistoryPage historyItems={historyItems} setHistoryItems={setHistoryItems} onSelectAudit={handleSelectAudit} setActivePage={setActivePage} />}
-            {activePage === 'templates' && <ReportTemplatesPage />}
-            {activePage === 'downloads' && <ReportTemplatesPage />}
-            {activePage === 'analytics' && <AnalyticsPage />}
-            {activePage === 'admin' && <AdminPage />}
-            {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} serverConnected={serverConnected} setServerConnected={setServerConnected} provider={provider} setProvider={setProvider} />}
-            {activePage === 'about' && <AboutPage />}
-          </div>
+          <LandingPage
+            onLaunchApp={() => setCurrentView('app')}
+            onOpenDoc={(doc) => {
+              setCurrentView('app');
+              setActivePage(doc);
+            }}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="app"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: 'var(--bg-app)' }}
+        >
+          <Sidebar
+            activePage={activePage}
+            setActivePage={setActivePage}
+            collapsed={sidebarCollapsed}
+            setCollapsed={setSidebarCollapsed}
+            serverConnected={serverConnected}
+            auditCount={historyItems.length}
+          />
 
-          {/* Floating Scroll to Top Button */}
-          {showScrollTop && (
-            <button
-              onClick={scrollToTop}
-              title="Scroll to Top"
-              style={{
-                position: 'fixed', bottom: '32px', right: '32px', zIndex: 999,
-                width: '44px', height: '44px', borderRadius: '50%',
-                background: 'linear-gradient(135deg, #0284C7, #0D9488)', color: '#FFFFFF',
-                border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 4px 14px rgba(2,132,199,0.4)', transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, height: '100vh', overflow: 'hidden' }}>
+            <Header
+              sidebarCollapsed={sidebarCollapsed}
+              setSidebarCollapsed={setSidebarCollapsed}
+              theme={theme}
+              setTheme={setTheme}
+              provider={provider}
+              setProvider={setProvider}
+              serverConnected={serverConnected}
+            />
+
+            <main
+              ref={mainRef}
+              onScroll={handleMainScroll}
+              style={{ flex: 1, minHeight: 0, padding: '24px', overflowY: 'auto', overflowX: 'hidden', position: 'relative', WebkitOverflowScrolling: 'touch' }}
             >
-              <ArrowUp size={20} />
-            </button>
-          )}
-        </main>
+              <div>
+                {activePage === 'dashboard' && <DashboardPage setActivePage={setActivePage} setReportText={setReportText} serverConnected={serverConnected} />}
+                {activePage === 'upload' && <UploadPage reportText={reportText} setReportText={setReportText} modality={modality} setModality={setModality} mandatorySections={mandatorySections} setMandatorySections={setMandatorySections} onStartAudit={handleStartAudit} isLoading={isAnalyzing} />}
+                {activePage === 'analysis' && <AnalysisPage isAnalyzing={isAnalyzing} currentStep={currentStep} auditResult={auditResult} analysisError={analysisError} setActivePage={setActivePage} provider={provider} />}
+                {activePage === 'quality' && <QualityDashboardPage auditResult={auditResult} reportText={activeReportText} setReportText={setReportText} setActivePage={setActivePage} />}
+                {activePage === 'suggestions' && <SuggestionsPage auditResult={auditResult} reportText={activeReportText} setReportText={setReportText} setActivePage={setActivePage} />}
+                {activePage === 'report' && <AuditReportPage auditResult={auditResult} reportText={activeReportText} modality={modality} />}
+                {activePage === 'viewer' && <ReportViewer reportText={activeReportText} auditResult={auditResult} />}
+                {activePage === 'history' && <AnalysisHistoryPage historyItems={historyItems} setHistoryItems={setHistoryItems} onSelectAudit={handleSelectAudit} setActivePage={setActivePage} />}
+                {activePage === 'templates' && <ReportTemplatesPage />}
+                {activePage === 'downloads' && <ReportTemplatesPage />}
+                {activePage === 'analytics' && <AnalyticsPage />}
+                {activePage === 'admin' && <AdminPage />}
+                {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} serverConnected={serverConnected} setServerConnected={setServerConnected} provider={provider} setProvider={setProvider} />}
+                {activePage === 'about' && <AboutPage />}
+              </div>
 
-        <Footer />
-      </div>
-    </div>
+              {/* Floating Scroll to Top Button */}
+              {showScrollTop && (
+                <button
+                  onClick={scrollToTop}
+                  title="Scroll to Top"
+                  style={{
+                    position: 'fixed', bottom: '32px', right: '32px', zIndex: 999,
+                    width: '44px', height: '44px', borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #0284C7, #0D9488)', color: '#FFFFFF',
+                    border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 4px 14px rgba(2,132,199,0.4)', transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <ArrowUp size={20} />
+                </button>
+              )}
+            </main>
+
+            <Footer />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
