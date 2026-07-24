@@ -58,9 +58,14 @@ export default function App() {
   }, [provider]);
 
   useEffect(() => {
-    fetch(`/api/status?provider=${provider}`)
-      .then((r) => r.json().then((d) => setServerConnected(r.ok && d.online)))
-      .catch(() => setServerConnected(false));
+    const checkServer = () => {
+      fetch(`/api/status?provider=${provider}`)
+        .then((r) => r.json().then((d) => setServerConnected(Boolean(r.ok && d.online))))
+        .catch(() => setServerConnected(false));
+    };
+    checkServer();
+    const interval = setInterval(checkServer, 10000);
+    return () => clearInterval(interval);
   }, [provider]);
 
   const handleStartAudit = async () => {
@@ -168,7 +173,7 @@ export default function App() {
               {activePage === 'downloads' && <ReportTemplatesPage />}
               {activePage === 'analytics' && <AnalyticsPage />}
               {activePage === 'admin' && <AdminPage />}
-              {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} serverConnected={serverConnected} provider={provider} setProvider={setProvider} />}
+              {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} serverConnected={serverConnected} setServerConnected={setServerConnected} provider={provider} setProvider={setProvider} />}
               {activePage === 'about' && <AboutPage />}
             </motion.div>
           </AnimatePresence>

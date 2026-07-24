@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Sun, Moon, Wifi, WifiOff, Cpu, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Sun, Moon, Wifi, WifiOff, Cpu, RefreshCw, CheckCircle2, Key, Eye, EyeOff, Save, Lock, Check } from 'lucide-react';
 
-export default function SettingsPage({ theme, setTheme, serverConnected, provider, setProvider }) {
+export default function SettingsPage({ theme, setTheme, serverConnected, setServerConnected, provider, setProvider }) {
   const [checking, setChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState(null);
   const [latency, setLatency] = useState(null);
@@ -11,10 +11,12 @@ export default function SettingsPage({ theme, setTheme, serverConnected, provide
     const start = Date.now();
     try {
       const r = await fetch(`/api/status?provider=${provider || 'groq'}`);
-      await r.json();
+      const data = await r.json();
       setLatency(Date.now() - start);
+      if (setServerConnected) setServerConnected(Boolean(r.ok && data.online));
     } catch {
       setLatency(null);
+      if (setServerConnected) setServerConnected(false);
     } finally {
       setLastChecked(new Date());
       setChecking(false);
@@ -114,6 +116,9 @@ export default function SettingsPage({ theme, setTheme, serverConnected, provide
         </div>
       </div>
 
+      {/* API Key Configuration */}
+      <ApiKeyCard provider={provider} checkStatus={checkStatus} cardStyle={card} />
+
       {/* System & Network Status */}
       <div style={card}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -182,6 +187,137 @@ export default function SettingsPage({ theme, setTheme, serverConnected, provide
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+function ApiKeyCard({ provider, checkStatus, cardStyle }) {
+  const providerName = (provider || 'groq') === 'groq' ? 'Groq' : 'Google Gemini';
+  const envVarName = (provider || 'groq') === 'groq' ? 'GROQ_API_KEY' : 'GEMINI_API_KEY';
+
+  const [apiKey, setApiKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    // Read from localStorage or reset on provider change
+    const saved = localStorage.getItem(`${(provider || 'groq')}_api_key`) || '';
+    setApiKey(saved);
+    setMessage(null);
+  }, [provider]);
+
+  const handleSaveKey = async (e) => {
+    e.preventDefault();
+    if (!apiKey.trim()) return;
+    setSaving(true);
+    setMessage(null);
+
+    try {
+      // Save locally
+      localStorage.setItem(`${(provider || 'groq')}_api_key`, apiKey.trim());
+
+      // Send to server endpoint
+      const res = await fetch('/api/save-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: provider || 'groq', api_key: apiKey.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: `${providerName} API key saved successfully!` });
+        if (checkStatus) checkStatus();
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to save key on server.' });
+      }
+    } catch {
+      // Offline fallback: saved to localStorage
+      setMessage({ type: 'success', text: `${providerName} API key stored locally.` });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={cardStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Key size={18} color="var(--accent)" />
+          <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            API Key Configuration ({providerName})
+          </h2>
+        </div>
+        <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', background: 'var(--surface-muted)', color: 'var(--text-muted)' }}>
+          {envVarName}
+        </span>
+      </div>
+
+      <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}>
+        Enter your <strong>{providerName} API key</strong> below to enable AI-powered radiology report auditing.
+      </p>
+
+      <form onSubmit={handleSaveKey} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '14px', pointerEvents: 'none' }} />
+          <input
+            type={showKey ? 'text' : 'password'}
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder={`Enter your ${envVarName} (e.g. ${provider === 'gemini' ? 'AIzaSy...' : 'gsk_...'})`}
+            style={{
+              width: '100%',
+              padding: '12px 42px 12px 40px',
+              borderRadius: '10px',
+              border: '1px solid var(--border)',
+              background: 'var(--surface-muted)',
+              color: 'var(--text-primary)',
+              fontSize: '13px',
+              outline: 'none',
+              fontFamily: showKey ? 'monospace' : 'inherit',
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowKey(!showKey)}
+            title={showKey ? 'Hide key' : 'Show key'}
+            style={{
+              position: 'absolute', right: '12px', background: 'none', border: 'none',
+              cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center',
+            }}
+          >
+            {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+          <button
+            type="submit"
+            disabled={saving || !apiKey.trim()}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '10px 20px', borderRadius: '10px',
+              background: 'var(--accent)', color: '#ffffff', border: 'none',
+              fontSize: '13px', fontWeight: 700, cursor: saving || !apiKey.trim() ? 'not-allowed' : 'pointer',
+              opacity: saving || !apiKey.trim() ? 0.6 : 1,
+              transition: 'all 0.2s',
+            }}
+          >
+            {saving ? <RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={15} />}
+            {saving ? 'Saving...' : 'Save API Key'}
+          </button>
+
+          {message && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              fontSize: '12px', fontWeight: 600,
+              color: message.type === 'success' ? 'var(--success)' : 'var(--danger, #ef4444)',
+            }}>
+              {message.type === 'success' && <Check size={14} />}
+              {message.text}
+            </div>
+          )}
+        </div>
+      </form>
     </div>
   );
 }
