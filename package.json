@@ -1,0 +1,36 @@
+{
+  "name": "radiology-report-audit-app",
+  "version": "1.0.0",
+  "description": "A production-ready AI-powered quality assurance web application for radiology reports — built with HTML5/CSS3/JavaScript SPA and Python (Flask). Supports both **Groq (Llama 3.3 70B)** and **Google Gemini AI**.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "python server.py",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.42.2",
+    "lucide-react": "^1.26.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "autoprefixer": "^10.5.4",
+    "gh-pages": "^6.3.0",
+    "postcss": "^8.5.22",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.1.5"
+  }
+}
