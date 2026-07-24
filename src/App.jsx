@@ -192,6 +192,8 @@ export default function App() {
           transition={{ duration: 0.3 }}
         >
           <LandingPage
+            theme={theme}
+            setTheme={setTheme}
             onLaunchApp={() => setCurrentView('app')}
             onOpenDoc={(doc) => {
               setCurrentView('app');

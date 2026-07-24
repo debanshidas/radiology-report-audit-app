@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Brain, BarChart3, ClipboardCheck, FileText, History, ShieldCheck, Zap, Stethoscope,
-  ChevronDown, Heart, Activity as PulseIcon
+  ChevronDown, Heart, Activity as PulseIcon, Sun, Moon
 } from 'lucide-react';
 
 const FEATURES = [
@@ -56,7 +56,24 @@ const FEATURES = [
   }
 ];
 
-export default function LandingPage({ onLaunchApp }) {
+export default function LandingPage({ onLaunchApp, theme, setTheme }) {
+  const isDark = theme === 'dark';
+
+  const colors = {
+    bg: isDark ? 'radial-gradient(circle at 10% 20%, #0F172A 0%, #020617 90%)' : 'radial-gradient(circle at 10% 20%, #F1F7FC 0%, #FFFFFF 90%)',
+    textPrimary: isDark ? '#F8FAFC' : '#2C4964',
+    textSecondary: isDark ? '#94A3B8' : '#6C757D',
+    cardBg: isDark ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+    cardBorder: isDark ? 'rgba(51, 65, 85, 0.6)' : '#E2E8F0',
+    cardShadow: isDark ? '0 4px 20px rgba(0, 0, 0, 0.35)' : '0 4px 12px rgba(44, 73, 100, 0.03)',
+    cardHoverShadow: isDark ? '0 16px 32px rgba(0, 0, 0, 0.5)' : '0 16px 32px rgba(44, 73, 100, 0.12)',
+    medicareCardBg: isDark ? '#1E293B' : '#FFFFFF',
+    medicareCardBorder: isDark ? '#334155' : '#DDE7F0',
+    statBg: isDark ? '#1E293B' : '#F8FAFC',
+    statBorder: isDark ? '#334155' : '#E2E8F0',
+    accentSoft: isDark ? 'rgba(63, 187, 192, 0.12)' : 'rgba(25, 119, 204, 0.05)',
+  };
+
   // Container variant for staggering cards
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -79,18 +96,21 @@ export default function LandingPage({ onLaunchApp }) {
 
   return (
     <div style={{
-      background: 'radial-gradient(circle at 10% 20%, #F1F7FC 0%, #FFFFFF 90%)',
+      background: colors.bg,
       minHeight: '100vh',
       fontFamily: "'Poppins', 'Inter', sans-serif",
-      color: '#2C4964',
+      color: colors.textPrimary,
       position: 'relative',
-      overflowX: 'hidden'
+      overflowX: 'hidden',
+      transition: 'background 0.3s ease, color 0.3s ease'
     }}>
       
       {/* Light Clinical Grid Pattern Overlay */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-        backgroundImage: 'linear-gradient(rgba(25, 119, 204, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(25, 119, 204, 0.02) 1px, transparent 1px)',
+        backgroundImage: isDark
+          ? 'linear-gradient(rgba(63, 187, 192, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(63, 187, 192, 0.04) 1px, transparent 1px)'
+          : 'linear-gradient(rgba(25, 119, 204, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(25, 119, 204, 0.02) 1px, transparent 1px)',
         backgroundSize: '24px 24px',
         pointerEvents: 'none',
         zIndex: 1
@@ -110,7 +130,9 @@ export default function LandingPage({ onLaunchApp }) {
         style={{
           position: 'absolute', top: '10%', right: '15%',
           width: '300px', height: '300px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(63, 187, 192, 0.08) 0%, rgba(63, 187, 192, 0) 70%)',
+          background: isDark
+            ? 'radial-gradient(circle, rgba(63, 187, 192, 0.12) 0%, rgba(63, 187, 192, 0) 70%)'
+            : 'radial-gradient(circle, rgba(63, 187, 192, 0.08) 0%, rgba(63, 187, 192, 0) 70%)',
           filter: 'blur(30px)', pointerEvents: 'none', zIndex: 1
         }}
       />
@@ -127,7 +149,9 @@ export default function LandingPage({ onLaunchApp }) {
         style={{
           position: 'absolute', bottom: '20%', left: '5%',
           width: '400px', height: '400px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(25, 119, 204, 0.06) 0%, rgba(25, 119, 204, 0) 70%)',
+          background: isDark
+            ? 'radial-gradient(circle, rgba(25, 119, 204, 0.1) 0%, rgba(25, 119, 204, 0) 70%)'
+            : 'radial-gradient(circle, rgba(25, 119, 204, 0.06) 0%, rgba(25, 119, 204, 0) 70%)',
           filter: 'blur(40px)', pointerEvents: 'none', zIndex: 1
         }}
       />
@@ -146,13 +170,47 @@ export default function LandingPage({ onLaunchApp }) {
             }}>
               <ShieldCheck size={20} />
             </div>
-            <span style={{ fontSize: '16px', fontWeight: 800, color: '#2C4964', letterSpacing: '-0.3px' }}>
+            <span style={{ fontSize: '16px', fontWeight: 800, color: colors.textPrimary, letterSpacing: '-0.3px' }}>
               RadAudit <span style={{ color: '#3FBBC0', fontWeight: 700, fontSize: '12px' }}>Clinical AI</span>
             </span>
           </div>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6C757D', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3FBBC0', display: 'inline-block' }} />
-            HIS Integrated Gateway v3.2
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {/* Theme Toggle Button */}
+            {setTheme && (
+              <button
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                style={{
+                  background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: isDark ? '#FFD700' : '#1977CC',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                  transition: 'all 0.2s'
+                }}
+                title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.08)';
+                  e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
+                }}
+              >
+                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+            )}
+            <div style={{ fontSize: '12px', fontWeight: 600, color: colors.textSecondary, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3FBBC0', display: 'inline-block' }} />
+              HIS Integrated Gateway v3.2
+            </div>
           </div>
         </div>
 
@@ -175,15 +233,16 @@ export default function LandingPage({ onLaunchApp }) {
             >
               <span style={{
                 fontSize: '11px', fontWeight: 800, color: '#1977CC',
-                background: '#EBF5FF', padding: '6px 14px', borderRadius: '20px',
+                background: isDark ? 'rgba(25, 119, 204, 0.15)' : '#EBF5FF',
+                padding: '6px 14px', borderRadius: '20px',
                 textTransform: 'uppercase', letterSpacing: '1px', display: 'inline-block',
-                marginBottom: '16px', border: '1px solid #DDE7F0'
+                marginBottom: '16px', border: `1px solid ${colors.medicareCardBorder}`
               }}>
                 ACR Standard Quality Assurance
               </span>
               
               <h1 style={{
-                fontSize: '40px', fontWeight: 900, color: '#2C4964',
+                fontSize: '40px', fontWeight: 900, color: colors.textPrimary,
                 lineHeight: 1.15, margin: '0 0 10px 0', letterSpacing: '-1px'
               }}>
                 Radiology Report<br />
@@ -205,7 +264,7 @@ export default function LandingPage({ onLaunchApp }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              style={{ fontSize: '13.5px', color: '#6C757D', lineHeight: 1.6, margin: 0 }}
+              style={{ fontSize: '13.5px', color: colors.textSecondary, lineHeight: 1.6, margin: 0 }}
             >
               The Radiology Report Audit System is an intelligent platform designed to evaluate the quality, completeness, and consistency of radiology reports using artificial intelligence.
             </motion.p>
@@ -214,12 +273,12 @@ export default function LandingPage({ onLaunchApp }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              style={{ fontSize: '13.5px', color: '#6C757D', lineHeight: 1.6, margin: 0 }}
+              style={{ fontSize: '13.5px', color: colors.textSecondary, lineHeight: 1.6, margin: 0 }}
             >
               The system analyzes uploaded reports across multiple quality dimensions, including clinical completeness, terminology consistency, report structure, readability, findings, impressions, and overall documentation quality. It provides detailed scoring, actionable recommendations, and downloadable audit reports to help improve reporting standards and support continuous quality improvement in radiology.
             </motion.p>
 
-            {/* CTA Button Block (Learn More removed completely) */}
+            {/* CTA Button Block */}
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
@@ -273,13 +332,14 @@ export default function LandingPage({ onLaunchApp }) {
               style={{
                 width: '100%',
                 maxWidth: '440px',
-                background: '#FFFFFF',
+                background: colors.medicareCardBg,
                 borderRadius: '20px',
-                border: '1px solid #DDE7F0',
-                boxShadow: '0 20px 40px rgba(44, 73, 100, 0.08)',
+                border: `1px solid ${colors.medicareCardBorder}`,
+                boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.4)' : '0 20px 40px rgba(44, 73, 100, 0.08)',
                 padding: '24px',
                 position: 'relative',
-                zIndex: 2
+                zIndex: 2,
+                transition: 'background 0.3s ease, border 0.3s ease'
               }}
             >
               <div style={{ background: '#162C40', borderRadius: '12px', height: '200px', width: '100%', position: 'relative', overflow: 'hidden', border: '1px solid #2C4964' }}>
@@ -308,12 +368,12 @@ export default function LandingPage({ onLaunchApp }) {
                 </div>
               </div>
 
-              <div style={{ marginTop: '20px', borderTop: '1px solid #DDE7F0', paddingTop: '16px' }}>
+              <div style={{ marginTop: '20px', borderTop: `1px solid ${colors.medicareCardBorder}`, paddingTop: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 800, color: '#1977CC', textTransform: 'uppercase' }}>Report Compliance Index</span>
                   <span style={{ fontSize: '13px', fontWeight: 900, color: '#15803D' }}>95 / 100</span>
                 </div>
-                <div style={{ width: '100%', height: '6px', background: '#F1F7FC', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: '6px', background: isDark ? '#0F172A' : '#F1F7FC', borderRadius: '4px', overflow: 'hidden' }}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: '95%' }}
@@ -322,12 +382,12 @@ export default function LandingPage({ onLaunchApp }) {
                   />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '14px' }}>
-                  <div style={{ background: '#F8FAFC', padding: '8px 10px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '10.5px' }}>
-                    <div style={{ color: '#6C757D', fontWeight: 600 }}>Findings status</div>
+                  <div style={{ background: colors.statBg, padding: '8px 10px', borderRadius: '8px', border: `1px solid ${colors.statBorder}`, fontSize: '10.5px', transition: 'background 0.3s, border 0.3s' }}>
+                    <div style={{ color: colors.textSecondary, fontWeight: 600 }}>Findings status</div>
                     <div style={{ fontWeight: 800, color: '#15803D', marginTop: '2px' }}>✓ Compliant</div>
                   </div>
-                  <div style={{ background: '#F8FAFC', padding: '8px 10px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '10.5px' }}>
-                    <div style={{ color: '#6C757D', fontWeight: 600 }}>RadLex vocabulary</div>
+                  <div style={{ background: colors.statBg, padding: '8px 10px', borderRadius: '8px', border: `1px solid ${colors.statBorder}`, fontSize: '10.5px', transition: 'background 0.3s, border 0.3s' }}>
+                    <div style={{ color: colors.textSecondary, fontWeight: 600 }}>RadLex vocabulary</div>
                     <div style={{ fontWeight: 800, color: '#1977CC', marginTop: '2px' }}>✓ 98% Precision</div>
                   </div>
                 </div>
@@ -338,7 +398,12 @@ export default function LandingPage({ onLaunchApp }) {
             <motion.div
               animate={{ y: [-5, 5, -5] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ position: 'absolute', top: '15%', left: '5%', zIndex: 3, background: '#FFFFFF', padding: '8px', borderRadius: '50%', boxShadow: '0 4px 10px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}
+              style={{
+                position: 'absolute', top: '15%', left: '5%', zIndex: 3,
+                background: colors.medicareCardBg, padding: '8px', borderRadius: '50%',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.06)', border: `1px solid ${colors.medicareCardBorder}`,
+                transition: 'background 0.3s, border 0.3s'
+              }}
             >
               <Stethoscope size={16} color="#1977CC" />
             </motion.div>
@@ -349,20 +414,27 @@ export default function LandingPage({ onLaunchApp }) {
       </div>
 
       {/* Platform Features Section (Animated Cards) */}
-      <div style={{ background: 'rgba(255, 255, 255, 0.85)', borderTop: '1px solid #DDE7F0', padding: '80px 24px', position: 'relative', zIndex: 2 }}>
+      <div style={{
+        background: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.85)',
+        borderTop: `1px solid ${colors.medicareCardBorder}`,
+        padding: '80px 24px',
+        position: 'relative',
+        zIndex: 2,
+        transition: 'background 0.3s, border 0.3s'
+      }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           
           {/* Section Header */}
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <h2 style={{ fontSize: '26px', fontWeight: 900, color: '#2C4964', margin: '0 0 12px 0', letterSpacing: '-0.5px' }}>
+            <h2 style={{ fontSize: '26px', fontWeight: 900, color: colors.textPrimary, margin: '0 0 12px 0', letterSpacing: '-0.5px' }}>
               Why Choose Radiology Report Audit System?
             </h2>
-            <p style={{ fontSize: '13.5px', color: '#6C757D', maxWidth: '750px', margin: '0 auto', lineHeight: 1.6, fontWeight: 500 }}>
+            <p style={{ fontSize: '13.5px', color: colors.textSecondary, maxWidth: '750px', margin: '0 auto', lineHeight: 1.6, fontWeight: 500 }}>
               Experience AI-powered radiology quality assessment through an intelligent, secure, and easy-to-use platform designed to standardize radiology reporting and improve clinical documentation.
             </p>
           </div>
 
-          {/* Cards Grid: Responsive Desktop:4, Tablet:2, Mobile:1 */}
+          {/* Cards Grid */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -383,13 +455,13 @@ export default function LandingPage({ onLaunchApp }) {
                   whileHover={{
                     scale: 1.03,
                     y: -8,
-                    boxShadow: '0 16px 32px rgba(44, 73, 100, 0.12)',
+                    boxShadow: colors.cardHoverShadow,
                     borderColor: '#1977CC'
                   }}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.8)',
+                    background: colors.cardBg,
                     backdropFilter: 'blur(10px)',
-                    border: '1px solid #E2E8F0',
+                    border: `1px solid ${colors.cardBorder}`,
                     borderRadius: '16px',
                     padding: '24px',
                     transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1.0)',
@@ -397,32 +469,32 @@ export default function LandingPage({ onLaunchApp }) {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    boxShadow: '0 4px 12px rgba(44, 73, 100, 0.03)'
+                    boxShadow: colors.cardShadow
                   }}
                 >
                   <div>
                     {/* Floating Icon Box */}
                     <div style={{
                       width: '44px', height: '44px', borderRadius: '12px',
-                      background: 'rgba(25, 119, 204, 0.05)',
+                      background: isDark ? 'rgba(63, 187, 192, 0.1)' : 'rgba(25, 119, 204, 0.05)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      marginBottom: '18px', border: '1px solid rgba(25, 119, 204, 0.12)'
+                      marginBottom: '18px', border: isDark ? '1px solid rgba(63, 187, 192, 0.2)' : '1px solid rgba(25, 119, 204, 0.12)'
                     }}>
                       <IconComponent size={20} color="#1977CC" />
                     </div>
                     
-                    <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#2C4964', margin: '0 0 10px 0', letterSpacing: '-0.2px' }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: 800, color: colors.textPrimary, margin: '0 0 10px 0', letterSpacing: '-0.2px' }}>
                       {feat.title}
                     </h3>
                     
-                    <p style={{ fontSize: '12.5px', color: '#6C757D', lineHeight: 1.55, margin: '0 0 20px 0' }}>
+                    <p style={{ fontSize: '12.5px', color: colors.textSecondary, lineHeight: 1.55, margin: '0 0 20px 0' }}>
                       {feat.desc}
                     </p>
                   </div>
 
                   {/* Bulleted Feature Highlights/Statistics */}
                   <div style={{
-                    borderTop: '1px solid #E2E8F0',
+                    borderTop: `1px solid ${colors.cardBorder}`,
                     paddingTop: '14px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -434,7 +506,7 @@ export default function LandingPage({ onLaunchApp }) {
                           width: '4px', height: '4px', borderRadius: '50%',
                           background: '#3FBBC0', display: 'inline-block'
                         }} />
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#2C4964' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textPrimary }}>
                           {stat}
                         </span>
                       </div>
@@ -450,7 +522,13 @@ export default function LandingPage({ onLaunchApp }) {
       </div>
 
       {/* Compliance Footer */}
-      <div style={{ background: '#F1F7FC', borderTop: '1px solid #DDE7F0', padding: '24px', textAlign: 'center', fontSize: '11.5px', color: '#6C757D', position: 'relative', zIndex: 2 }}>
+      <div style={{
+        background: isDark ? '#020617' : '#F1F7FC',
+        borderTop: `1px solid ${colors.medicareCardBorder}`,
+        padding: '24px', textAlign: 'center', fontSize: '11.5px',
+        color: colors.textSecondary, position: 'relative', zIndex: 2,
+        transition: 'background 0.3s, border 0.3s'
+      }}>
         © 2026 Radiology Report Audit System (RadAudit). HIPAA Compliant In-Browser Execution.
       </div>
 
