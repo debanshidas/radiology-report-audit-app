@@ -1,6 +1,6 @@
 /**
  * Client-side Direct AI Audit Engine (Groq / Gemini API)
- * Standardizes AI suggestions, remarks, scope of correction, and original report context.
+ * Standardizes AI suggestions, remarks, scope of correction, and detailed easy-to-understand explanations.
  */
 
 export async function directGroqAudit({ report_text, modality, mandatory_sections, provider = 'groq', api_key = '' }) {
@@ -14,7 +14,7 @@ Required JSON Output Schema:
 {
   "quality_score": 85,
   "readiness_status": "Ready for Sign-off" | "Minor Revision Needed" | "Major Revision Required" | "Not Ready for Clinical Sign-off",
-  "overall_justification": "Detailed explanation of scoring based on ACR standards.",
+  "overall_justification": "Structured, detailed, easy-to-understand summary explaining exactly why marks were deducted. Use clear bullet points listing each deficiency, exact points deducted, and exact correction required.",
   "effective_modality": "${modality || 'Chest X-Ray'}",
   "suggestions": [
     {
@@ -24,7 +24,7 @@ Required JSON Output Schema:
       "finding": "Specific quality defect identified in report",
       "original": "Exact text snippet from original report or N/A if missing",
       "recommended": "Exact recommended correction text to use in final report",
-      "remarks": "Senior QA Officer observation notes and audit remarks",
+      "remarks": "Senior QA Officer detailed observation remarks explaining why this item failed and how to correct it",
       "rationale": "Detailed explanation of clinical impact and why this change is necessary"
     }
   ],
@@ -40,11 +40,11 @@ Required JSON Output Schema:
     {
       "points": -10,
       "section": "Findings",
-      "reason": "Missing findings section",
+      "reason": "Missing procedure details and contrast agent specification",
       "scope_of_correction": "Add Missing Section",
-      "remarks": "Critical failure: Primary anatomical observation record is absent.",
-      "clinical_impact": "High risk of missing secondary pathologies",
-      "suggested_improvement": "Add comprehensive anatomical findings"
+      "remarks": "The report fails to specify imaging pulse sequence, slice thickness, or IV contrast volume.",
+      "clinical_impact": "High risk of missing secondary pathologies or compromising technique reproducibility",
+      "suggested_improvement": "Add Technique section specifying 100 mL Omnipaque 350 IV contrast"
     }
   ],
   "sections": [
@@ -126,7 +126,6 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
   const quality_score = parsed.quality_score ?? parsed.overall_score ?? 80;
   const readiness_status = parsed.readiness_status ?? parsed.readiness ?? (quality_score >= 90 ? 'Ready for Sign-off' : 'Revision Needed');
   const effective_modality = parsed.effective_modality ?? parsed.modality ?? requestedModality ?? 'Chest X-Ray';
-  const overall_justification = parsed.overall_justification ?? parsed.score_justification ?? `Report audited with score ${quality_score}/100.`;
 
   // Normalize suggestions array
   let suggestions = parsed.suggestions;
@@ -157,7 +156,6 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
       ];
     }
   } else {
-    // Ensure every suggestion has scope_of_correction & remarks
     suggestions = suggestions.map((s) => ({
       category: s.category || 'Clinical QA',
       severity: s.severity || 'Medium',
@@ -170,13 +168,10 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
     }));
   }
 
-  // Normalize highlights
-  const highlights = Array.isArray(parsed.highlights) ? parsed.highlights : [];
-
   // Normalize deductions log
   let deductions_log = parsed.deductions_log;
   if (!Array.isArray(deductions_log) || deductions_log.length === 0) {
-    deductions_log = suggestions.map((s, idx) => ({
+    deductions_log = suggestions.map((s) => ({
       points: s.severity === 'High' ? -15 : s.severity === 'Medium' ? -10 : -5,
       section: s.category || 'General QA',
       reason: s.finding,
@@ -196,6 +191,17 @@ function normalizeAuditResult(parsed, requestedModality, originalReportText) {
       suggested_improvement: d.suggested_improvement || 'Correct report section.'
     }));
   }
+
+  // Build a rich, structured overall_justification summary if missing or brief
+  let overall_justification = parsed.overall_justification || parsed.score_justification;
+  if (!overall_justification || overall_justification.length < 50) {
+    const totalDeducted = deductions_log.reduce((acc, d) => acc + Math.abs(d.points), 0);
+    overall_justification = `Report evaluated with score ${quality_score}/100 (${readiness_status}). Explicit deduction analysis (-${totalDeducted} pts total):\n` +
+      deductions_log.map((d, i) => `${i + 1}. ${d.reason} (${d.points} pts): ${d.remarks || d.suggested_improvement}`).join('\n');
+  }
+
+  // Normalize highlights
+  const highlights = Array.isArray(parsed.highlights) ? parsed.highlights : [];
 
   // Normalize sections
   let sections = parsed.sections;

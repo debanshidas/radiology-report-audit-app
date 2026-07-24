@@ -207,18 +207,39 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
               </div>
             </div>
 
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                  Senior QA Officer Audit Remarks
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                  Senior QA Officer Audit Remarks & Score Breakdown
                 </span>
-                <span style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)' }}>
-                  Audit Reference: <strong>{res.audit_id}</strong>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                  Audit Ref: <strong>{res.audit_id}</strong>
                 </span>
               </div>
-              <p style={{ fontSize: '12.5px', color: 'var(--text-primary)', lineHeight: 1.6, margin: 0 }}>
+
+              {/* Main Overall Justification Text */}
+              <div style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.6, fontWeight: 500 }}>
                 {res.overall_justification}
-              </p>
+              </div>
+
+              {/* Instant Point-by-Point Deficiency Summary Pills */}
+              {res.deductions_log && res.deductions_log.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px', paddingTop: '10px', borderTop: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                    Identified Deficiencies & Penalties (-{res.deductions_log.reduce((acc, d) => acc + Math.abs(d.points), 0)} pts total):
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {res.deductions_log.map((ded, i) => (
+                      <span key={i} style={{
+                        fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px',
+                        background: '#FEF2F2', color: '#991B1B', border: '1px solid #FECACA', display: 'inline-flex', alignItems: 'center', gap: '4px'
+                      }}>
+                        <span style={{ fontWeight: 900, color: '#DC2626' }}>{ded.points} pts</span> • {ded.reason}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
