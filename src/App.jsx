@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-
 import Header from './components/Header';
-import { apiFetch } from './utils/apiClient';
-import { directGroqAudit } from './utils/directGroqAudit';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
-import ReportViewer from './components/ReportViewer';
 import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
 import UploadPage from './pages/UploadPage';
@@ -14,12 +9,15 @@ import AnalysisPage from './pages/AnalysisPage';
 import QualityDashboardPage from './pages/QualityDashboardPage';
 import SuggestionsPage from './pages/SuggestionsPage';
 import AuditReportPage from './pages/AuditReportPage';
+import ReportViewer from './components/ReportViewer';
 import AnalysisHistoryPage from './pages/AnalysisHistoryPage';
 import ReportTemplatesPage from './pages/ReportTemplatesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import AdminPage from './pages/AdminPage';
 import SettingsPage from './pages/SettingsPage';
 import AboutPage from './pages/AboutPage';
+import { apiFetch } from './utils/apiClient';
+import { directGroqAudit } from './utils/directGroqAudit';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('app');
@@ -97,7 +95,7 @@ export default function App() {
         isSuccess = true;
       }
     } catch (err) {
-      // Backend offline fallback to direct AI audit
+      // Fallback to direct AI audit
     }
 
     if (!isSuccess) {
@@ -124,11 +122,13 @@ export default function App() {
 
     setTimeout(() => {
       if (isSuccess && data && (data.quality_score !== undefined || data.overall_score !== undefined)) {
-        // Normalize schema if needed
         if (data.quality_score === undefined && data.overall_score !== undefined) {
           data.quality_score = data.overall_score;
           data.readiness_status = data.readiness;
         }
+
+        // Attach original report text directly to auditResult object
+        data.original_report_text = reportText;
 
         setAuditResult(data);
         if (data.effective_modality) setModality(data.effective_modality);
@@ -156,58 +156,69 @@ export default function App() {
     }, 3200);
   };
 
+  const handleSelectAudit = (selectedItem) => {
+    const resData = selectedItem.audit_result || selectedItem;
+    const txt = resData.original_report_text || resData.report_text || selectedItem.report_title || '';
+    if (txt) setReportText(txt);
+    setAuditResult(resData);
+  };
+
+  const activeReportText = reportText || auditResult?.original_report_text || auditResult?.report_text || '';
+
   if (currentView === 'landing') {
     return (
-      <LandingPage onStartAnalysis={() => { setCurrentView('app'); setActivePage('upload'); }} />
+      <LandingPage
+        onLaunchApp={() => setCurrentView('app')}
+        onOpenDoc={(doc) => {
+          setCurrentView('app');
+          setActivePage(doc);
+        }}
+      />
     );
   }
 
   return (
-    <div className="app-shell">
-      <Header
-        currentView={currentView}
-        setCurrentView={setCurrentView}
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-app)' }}>
+      <Sidebar
+        activePage={activePage}
+        setActivePage={setActivePage}
+        collapsed={sidebarCollapsed}
+        setCollapsed={setSidebarCollapsed}
         serverConnected={serverConnected}
-        theme={theme}
-        setTheme={setTheme}
+        auditCount={historyItems.length}
       />
 
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <Sidebar
-          activePage={activePage}
-          setActivePage={setActivePage}
-          collapsed={sidebarCollapsed}
-          setCollapsed={setSidebarCollapsed}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <Header
+          sidebarCollapsed={sidebarCollapsed}
+          setSidebarCollapsed={setSidebarCollapsed}
+          theme={theme}
+          setTheme={setTheme}
+          provider={provider}
+          setProvider={setProvider}
+          serverConnected={serverConnected}
         />
 
-        <main className="app-main">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activePage}
-              className="app-content"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-            >
-              {activePage === 'dashboard' && <DashboardPage setActivePage={setActivePage} setReportText={setReportText} serverConnected={serverConnected} />}
-              {activePage === 'upload' && <UploadPage reportText={reportText} setReportText={setReportText} modality={modality} setModality={setModality} mandatorySections={mandatorySections} setMandatorySections={setMandatorySections} onStartAudit={handleStartAudit} isLoading={isAnalyzing} />}
-              {activePage === 'analysis' && <AnalysisPage isAnalyzing={isAnalyzing} currentStep={currentStep} auditResult={auditResult} analysisError={analysisError} setActivePage={setActivePage} provider={provider} />}
-              {activePage === 'quality' && <QualityDashboardPage auditResult={auditResult} setActivePage={setActivePage} />}
-              {activePage === 'suggestions' && <SuggestionsPage auditResult={auditResult} setActivePage={setActivePage} />}
-              {activePage === 'report' && <AuditReportPage auditResult={auditResult} reportText={reportText} modality={modality} />}
-              {activePage === 'viewer' && <ReportViewer reportText={reportText} auditResult={auditResult} />}
-              {activePage === 'history' && <AnalysisHistoryPage historyItems={historyItems} setHistoryItems={setHistoryItems} onSelectAudit={setAuditResult} setActivePage={setActivePage} />}
-              {activePage === 'templates' && <ReportTemplatesPage />}
-              {activePage === 'downloads' && <ReportTemplatesPage />}
-              {activePage === 'analytics' && <AnalyticsPage />}
-              {activePage === 'admin' && <AdminPage />}
-              {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} serverConnected={serverConnected} setServerConnected={setServerConnected} provider={provider} setProvider={setProvider} />}
-              {activePage === 'about' && <AboutPage />}
-            </motion.div>
-          </AnimatePresence>
-          <Footer />
+        <main style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div>
+            {activePage === 'dashboard' && <DashboardPage setActivePage={setActivePage} setReportText={setReportText} serverConnected={serverConnected} />}
+            {activePage === 'upload' && <UploadPage reportText={reportText} setReportText={setReportText} modality={modality} setModality={setModality} mandatorySections={mandatorySections} setMandatorySections={setMandatorySections} onStartAudit={handleStartAudit} isLoading={isAnalyzing} />}
+            {activePage === 'analysis' && <AnalysisPage isAnalyzing={isAnalyzing} currentStep={currentStep} auditResult={auditResult} analysisError={analysisError} setActivePage={setActivePage} provider={provider} />}
+            {activePage === 'quality' && <QualityDashboardPage auditResult={auditResult} reportText={activeReportText} setReportText={setReportText} setActivePage={setActivePage} />}
+            {activePage === 'suggestions' && <SuggestionsPage auditResult={auditResult} reportText={activeReportText} setReportText={setReportText} setActivePage={setActivePage} />}
+            {activePage === 'report' && <AuditReportPage auditResult={auditResult} reportText={activeReportText} modality={modality} />}
+            {activePage === 'viewer' && <ReportViewer reportText={activeReportText} auditResult={auditResult} />}
+            {activePage === 'history' && <AnalysisHistoryPage historyItems={historyItems} setHistoryItems={setHistoryItems} onSelectAudit={handleSelectAudit} setActivePage={setActivePage} />}
+            {activePage === 'templates' && <ReportTemplatesPage />}
+            {activePage === 'downloads' && <ReportTemplatesPage />}
+            {activePage === 'analytics' && <AnalyticsPage />}
+            {activePage === 'admin' && <AdminPage />}
+            {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} serverConnected={serverConnected} setServerConnected={setServerConnected} provider={provider} setProvider={setProvider} />}
+            {activePage === 'about' && <AboutPage />}
+          </div>
         </main>
+
+        <Footer />
       </div>
     </div>
   );
