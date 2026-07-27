@@ -92,7 +92,7 @@ export default function SettingsPage({ theme, setTheme, serverConnected, setServ
         <div style={{ display: 'flex', gap: '12px' }}>
           {[
             { id: 'groq', name: 'Groq AI (Llama 3.3 70B)', desc: 'Ultra-fast clinical reasoning & QA' },
-            { id: 'gemini', name: 'Google Gemini 2.0 Flash', desc: 'High-precision multimodal analysis' },
+            { id: 'openai', name: 'OpenAI LLM (GPT-4o)', desc: 'Advanced clinical reasoning & QA' },
           ].map((p) => {
             const active = (provider || 'groq') === p.id;
             return (

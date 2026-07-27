@@ -76,7 +76,7 @@ export default function Header({ sidebarCollapsed, setSidebarCollapsed, theme, s
             background: '#3FBBC0'
           }} />
           <span style={{ fontSize: '11px', fontWeight: 600, color: '#FFFFFF' }}>
-            {serverConnected ? 'HIS Online (Flask)' : 'Cloud AI (Groq/Gemini)'}
+            {serverConnected ? 'HIS Online (Flask)' : 'Cloud AI (Groq/OpenAI)'}
           </span>
         </div>
 

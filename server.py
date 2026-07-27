@@ -527,16 +527,32 @@ def test_key():
                         return jsonify({'status': 'ok', 'message': f'Groq API key is valid! ({m} ready)'})
                 except Exception:
                     continue
+        elif provider in ['openai', 'chatgpt']:
+            import http.client
+            import json
+            conn = http.client.HTTPSConnection("openrouter.ai")
+            payload = json.dumps({
+                "model": "openai/gpt-4o-mini",
+                "messages": [{"role": "user", "content": "Reply: OK"}],
+                "max_tokens": 5
+            })
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {api_key}',
+                'HTTP-Referer': 'http://localhost:3000',
+                'X-Title': 'RadAudit QA App'
+            }
+            conn.request("POST", "/api/v1/chat/completions", payload, headers)
+            res = conn.getresponse()
+            data = res.read()
+            resp_json = json.loads(data.decode("utf-8"))
+            if res.status == 200 and resp_json.get('choices'):
+                return jsonify({'status': 'ok', 'message': 'OpenAI (OpenRouter) API key is valid and connected!'})
+            else:
+                error_msg = resp_json.get('error', {}).get('message', 'Unauthorized or invalid key')
+                return jsonify({'status': 'error', 'error': error_msg}), res.status
         else:
-            from google import genai
-            from google.genai import types
-            client = genai.Client(api_key=api_key)
-            resp = client.models.generate_content(
-                model='gemini-2.0-flash', contents='Reply: OK',
-                config=types.GenerateContentConfig(temperature=0, max_output_tokens=5)
-            )
-            if resp.text:
-                return jsonify({'status': 'ok', 'message': 'Gemini API key is valid and connected!'})
+            return jsonify({'status': 'error', 'error': f'Unsupported provider: {provider}'}), 400
         return jsonify({'status': 'error', 'error': 'Empty response from provider.'}), 502
     except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)}), 400

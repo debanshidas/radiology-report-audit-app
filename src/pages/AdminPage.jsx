@@ -89,7 +89,7 @@ export default function AdminPage() {
           </div>
           {[
             { label: 'Groq API Engine', value: 'Connected (380ms)', ok: true },
-            { label: 'Gemini 2.0 Flash', value: 'Connected (510ms)', ok: true },
+            { label: 'OpenAI GPT-4o', value: 'Connected (510ms)', ok: true },
             { label: 'PDF Generator', value: 'ReportLab v4.0', ok: true },
             { label: 'Session Cache', value: 'Operational', ok: true },
           ].map((item, i) => (

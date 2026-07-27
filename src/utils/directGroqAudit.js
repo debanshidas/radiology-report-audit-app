@@ -4,7 +4,10 @@
  */
 
 export async function directGroqAudit({ report_text, modality, mandatory_sections, provider = 'groq', api_key = '' }) {
-  const key = api_key || localStorage.getItem(`${provider}_api_key`) || localStorage.getItem('groq_api_key') || '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';
+  const key = api_key || 
+              localStorage.getItem(`${provider}_api_key`) || 
+              localStorage.getItem('openai_api_key') || 
+              (provider === 'groq' ? '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' : '');
 
   const systemPrompt = `You are a Senior Radiology Quality Assurance Officer and ACR Audit Specialist.
 Analyze the provided radiology report and evaluate its quality against ACR practice parameters across ALL 11 DIMENSIONS.
@@ -129,6 +132,45 @@ ${report_text}
     }
 
     throw new Error(lastError || 'Failed to connect to Groq API. Please check your model limits or API key.');
+  }
+
+  if (provider === 'openai') {
+    let lastError = null;
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`,
+          'HTTP-Referer': 'http://localhost:3000',
+          'X-Title': 'RadAudit QA App'
+        },
+        body: JSON.stringify({
+          model: 'openai/gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.1,
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        lastError = err.error?.message || `OpenRouter API returned HTTP ${res.status}`;
+        throw new Error(lastError);
+      }
+
+      const data = await res.json();
+      const rawContent = data.choices[0]?.message?.content || '{}';
+      const parsed = JSON.parse(rawContent);
+
+      return normalizeAuditResult(parsed, modality, report_text);
+    } catch (err) {
+      lastError = err.message;
+      throw new Error(lastError || 'Failed to connect to OpenAI (OpenRouter) API. Please check your API key.');
+    }
   }
 
   throw new Error('Unsupported direct provider');
