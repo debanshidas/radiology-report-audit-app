@@ -97,7 +97,12 @@ export default function App() {
   useEffect(() => {
     const checkServer = () => {
       apiFetch(`/api/status?provider=${provider}`)
-        .then((r) => r.json().then((d) => setServerConnected(Boolean(r.ok && d.online))))
+        .then((r) => r.json().then((d) => {
+          setServerConnected(Boolean(r.ok && d.online));
+          if (r.ok && d.api_key) {
+            localStorage.setItem(`${provider}_api_key`, d.api_key);
+          }
+        }))
         .catch(() => setServerConnected(false));
     };
     checkServer();

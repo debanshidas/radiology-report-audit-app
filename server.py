@@ -401,6 +401,7 @@ def status():
         'ai_connected': ai_connected,
         'provider': provider,
         'has_key': ai_connected,
+        'api_key': api_key
     })
 
 

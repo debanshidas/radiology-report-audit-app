@@ -6,6 +6,37 @@ export default function SettingsPage({ theme, setTheme, serverConnected, setServ
   const [checking, setChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState(null);
   const [latency, setLatency] = useState(null);
+  const [inputKey, setInputKey] = useState('');
+  const [saveStatus, setSaveStatus] = useState('');
+
+  // Load key from localStorage or fetch on provider change
+  useEffect(() => {
+    const savedKey = localStorage.getItem(`${provider}_api_key`);
+    if (savedKey) {
+      setInputKey(savedKey);
+    } else {
+      setInputKey('');
+    }
+  }, [provider]);
+
+  const handleSaveKey = async () => {
+    localStorage.setItem(`${provider}_api_key`, inputKey);
+    setSaveStatus('Key saved locally!');
+    setTimeout(() => setSaveStatus(''), 2500);
+
+    if (serverConnected) {
+      try {
+        const res = await apiFetch('/api/save-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider, api_key: inputKey })
+        });
+        if (res.ok) {
+          setSaveStatus('Key saved locally & updated on server!');
+        }
+      } catch (e) {}
+    }
+  };
 
   const checkStatus = async () => {
     setChecking(true);
@@ -15,6 +46,11 @@ export default function SettingsPage({ theme, setTheme, serverConnected, setServ
       const data = await r.json();
       setLatency(Date.now() - start);
       if (setServerConnected) setServerConnected(Boolean(r.ok && data.online));
+      if (r.ok && data.api_key) {
+        localStorage.setItem(`${provider || 'groq'}_api_key`, data.api_key);
+        // Pre-fill inputKey if empty
+        setInputKey(prev => prev || data.api_key);
+      }
     } catch {
       setLatency(null);
       if (setServerConnected) setServerConnected(false);
@@ -114,6 +150,52 @@ export default function SettingsPage({ theme, setTheme, serverConnected, setServ
               </button>
             );
           })}
+        </div>
+      </div>
+
+
+      {/* API Key Management */}
+      <div style={card}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <Key size={18} color="var(--accent)" />
+          <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            API Key Configuration
+          </h2>
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+            Enter your key below to configure the active <strong>{provider.toUpperCase()}</strong> engine.
+          </div>
+          
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <input
+              type="password"
+              value={inputKey}
+              onChange={(e) => setInputKey(e.target.value)}
+              placeholder={`Enter ${provider.toUpperCase()} API Key`}
+              style={{
+                flex: 1, padding: '10px 12px', borderRadius: '8px',
+                border: '1px solid var(--border)', background: 'var(--surface-muted)',
+                color: 'var(--text-primary)', fontSize: '13px', outline: 'none'
+              }}
+            />
+            <button
+              onClick={handleSaveKey}
+              style={{
+                padding: '10px 20px', borderRadius: '8px', background: 'var(--accent)',
+                border: 'none', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+            >
+              <Save size={14} /> Save Key
+            </button>
+          </div>
+          {saveStatus && (
+            <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#059669', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Check size={14} /> {saveStatus}
+            </div>
+          )}
         </div>
       </div>
 
