@@ -183,7 +183,7 @@ export default function DashboardPage({ setActivePage, setReportText, setModalit
           <div className="enterprise-card" style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{ padding: '10px 14px', background: 'var(--surface-muted)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
-                Recent Audits Queue
+                Audit Queue
               </span>
               <button onClick={() => setActivePage('history')} style={{ background: 'none', border: 'none', fontSize: '11px', color: '#0284C7', fontWeight: 700, cursor: 'pointer' }}>
                 View All →
