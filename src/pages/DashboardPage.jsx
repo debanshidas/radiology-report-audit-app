@@ -2,7 +2,7 @@ import React from 'react';
 import { LayoutDashboard, Upload, History, FileCode, BarChart3, TrendingUp, ShieldCheck, ArrowRight, FileText, CheckCircle2, AlertTriangle, Clock, ArrowLeft, Wifi } from 'lucide-react';
 import { QualityTrendChart, ModalityDistributionChart } from '../components/AnalyticsCharts';
 
-export default function DashboardPage({ setActivePage, setReportText, setModality, onBackToWelcome, serverConnected }) {
+export default function DashboardPage({ setActivePage, setReportText, setModality, onBackToWelcome, serverConnected, queuedReports }) {
   const handleLaunchSample = (mod, sampleText) => {
     setModality(mod);
     setReportText(sampleText);
@@ -178,36 +178,6 @@ export default function DashboardPage({ setActivePage, setReportText, setModalit
             </button>
           </div>
 
-          {/* Network Strength Diagnostic Panel */}
-          <div className="enterprise-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Wifi size={14} color="var(--accent)" />
-                <h3 style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                  Network Strength
-                </h3>
-              </div>
-              <span style={{ fontSize: '10px', fontWeight: 700, color: '#16A34A', background: 'rgba(22, 197, 94, 0.1)', padding: '2px 8px', borderRadius: '10px' }}>
-                {serverConnected ? 'Excellent' : 'Stable'}
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--surface-muted)', padding: '10px', borderRadius: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '16px' }}>
-                {[1, 2, 3, 4, 5].map((b) => (
-                  <div key={b} style={{ width: '3px', height: `${b * 20}%`, background: '#16A34A', borderRadius: '1px' }} />
-                ))}
-              </div>
-              <div style={{ flex: 1, fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                18 ms Latency
-              </div>
-            </div>
-
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div>• Secure TLS 1.3 Transmission Gate</div>
-              <div>• 0.00% Packet Loss (Direct Link)</div>
-            </div>
-          </div>
 
           {/* Recent Audit Log Feed */}
           <div className="enterprise-card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -220,22 +190,48 @@ export default function DashboardPage({ setActivePage, setReportText, setModalit
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', divideY: '1px solid var(--border)' }}>
-              {[
-                { title: 'Chest X-Ray (Johnathan Miller)', time: '10 mins ago', score: 98, status: 'Compliant', color: '#16A34A' },
-                { title: 'CT Abdomen (Robert Johnson)', time: '35 mins ago', score: 30, status: 'Critical Failure', color: '#DC2626' },
-                { title: 'Brain MRI (Diana Prince)', time: '1 hour ago', score: 98, status: 'Compliant', color: '#16A34A' },
-                { title: 'Knee MRI (Bruce Wayne)', time: '2 hours ago', score: 96, status: 'Compliant', color: '#16A34A' },
-                { title: 'Thyroid US (Rachel Green)', time: '3 hours ago', score: 55, status: 'Major Revision', color: '#D97706' },
-              ].map((item, idx) => (
-                <div key={idx} style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {(queuedReports || []).map((item, idx) => (
+                <div key={idx} style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
                   <div>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>{item.title}</div>
-                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>{item.time}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        {item.modality}
+                      </span>
+                      {item.id && (
+                        <span style={{ fontSize: '10px', background: 'var(--surface-muted)', color: 'var(--text-muted)', padding: '1px 5px', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                          ID: {item.id}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{formatTimeAgo(item.timestamp)}</span>
+                      {item.priority && (
+                        <>
+                          <span style={{ color: 'var(--border)', fontSize: '10px' }}>•</span>
+                          <span style={{ 
+                            fontSize: '11.5px', 
+                            fontWeight: 700, 
+                            color: item.priority === 'High' || item.priority === 'Urgent' ? '#DC2626' : 'var(--text-muted)' 
+                          }}>
+                            {item.priority} Priority
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 900, color: item.color }}>{item.score}/100</div>
-                    <div style={{ fontSize: '9.5px', fontWeight: 700, color: item.color }}>{item.status}</div>
+                    <span style={{ 
+                      fontSize: '10.5px', 
+                      fontWeight: 800, 
+                      padding: '3px 8px', 
+                      borderRadius: '12px', 
+                      background: 'rgba(2, 132, 199, 0.1)', 
+                      color: '#0284C7',
+                      border: '1px solid rgba(2, 132, 199, 0.2)'
+                    }}>
+                      {item.status}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -248,4 +244,15 @@ export default function DashboardPage({ setActivePage, setReportText, setModalit
 
     </div>
   );
+}
+
+function formatTimeAgo(date) {
+  if (!date) return 'N/A';
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  return new Date(date).toLocaleDateString();
 }

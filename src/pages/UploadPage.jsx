@@ -5,6 +5,16 @@ import DemoLibraryModal from '../components/DemoLibraryModal';
 import { apiFetch } from '../utils/apiClient';
 import { DEMO_REPORTS } from '../data/demoReports';
 
+function getSimplifiedModality(mod) {
+  if (!mod) return 'X-ray';
+  const m = mod.toLowerCase();
+  if (m.includes('x-ray') || m.includes('xray') || m.includes('radiograph') || m.includes('cxr')) return 'X-ray';
+  if (m.includes('ct') || m.includes('mri') || m.includes('mr ') || m === 'mri' || m.includes('dexa') || m.includes('pet')) return 'CT';
+  if (m.includes('mammogram') || m.includes('mammography') || m.includes('breast')) return 'Mammography';
+  if (m.includes('ultrasound') || m.includes('sonogram') || m.includes('us') || m.includes('doppler') || m.includes('echo')) return 'Ultrasound';
+  return 'X-ray';
+}
+
 const SECTION_OPTIONS = [
   'Patient Demographics',
   'Clinical Indication / History',
@@ -52,7 +62,7 @@ export default function UploadPage({
       setReportText(data.text);
       setSelectedFile(file);
       setFileSize(data.filesize_kb ? `${data.filesize_kb} KB` : `${(file.size / 1024).toFixed(1)} KB`);
-      if (data.detected_modality) setModality(data.detected_modality);
+      if (data.detected_modality) setModality(getSimplifiedModality(data.detected_modality));
       if (data.detection_confidence) setDetectionConfidence(data.detection_confidence);
     } catch (err) {
       setUploadError(err.message || 'Error processing file. Please paste report text directly.');
@@ -83,7 +93,7 @@ export default function UploadPage({
 
   const handleSelectDemoCase = (demoCase) => {
     setReportText(demoCase.reportText);
-    setModality(demoCase.modality);
+    setModality(getSimplifiedModality(demoCase.modality));
     setActiveDemoCase(demoCase);
     setSelectedFile({ name: `${demoCase.title}.txt` });
     setFileSize('Demo Case');
@@ -328,10 +338,10 @@ export default function UploadPage({
           {/* Modality Selector */}
           <div className="medicare-card" style={{ padding: '18px' }}>
             <label style={{ fontSize: '12px', fontWeight: 800, color: '#2C4964', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-              Target Imaging Modality
+              Modality
             </label>
             <select
-              value={modality}
+              value={getSimplifiedModality(modality)}
               onChange={(e) => setModality(e.target.value)}
               style={{
                 width: '100%', padding: '10px', borderRadius: '6px',
@@ -340,11 +350,7 @@ export default function UploadPage({
               }}
             >
               {[
-                'Chest X-Ray', 'Abdomen X-Ray', 'Skull X-Ray', 'Spine X-Ray', 'Knee X-Ray', 'Shoulder X-Ray', 'Pelvis X-Ray',
-                'CT Brain', 'CT Chest', 'CT Abdomen', 'CT Spine', 'CT Angiography', 'HRCT Chest',
-                'MRI Brain', 'MRI Spine', 'MRI Knee', 'MRI Shoulder', 'MRI Abdomen', 'MR Angiography',
-                'Ultrasound Abdomen', 'Ultrasound Pelvis', 'Ultrasound Obstetrics', 'Thyroid Ultrasound', 'Doppler Study',
-                'Mammography'
+                'X-ray', 'CT', 'Mammography', 'Ultrasound'
               ].map((m) => (
                 <option key={m} value={m}>{m}</option>
               ))}

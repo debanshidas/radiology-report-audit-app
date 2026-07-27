@@ -117,14 +117,6 @@ export default function SettingsPage({ theme, setTheme, serverConnected, setServ
         </div>
       </div>
 
-      {/* Network Strength Diagnostic Card */}
-      <NetworkStrengthCard
-        serverConnected={serverConnected}
-        latency={latency}
-        checking={checking}
-        checkStatus={checkStatus}
-        cardStyle={card}
-      />
 
       {/* System & Network Status */}
       <div style={card}>
@@ -198,94 +190,3 @@ export default function SettingsPage({ theme, setTheme, serverConnected, setServ
   );
 }
 
-function NetworkStrengthCard({ serverConnected, latency, checking, checkStatus, cardStyle }) {
-  const getSignalStrength = () => {
-    if (!serverConnected) return { label: 'Disconnected', color: '#EF4444', bars: 0, text: 'No active connection to the AI gateway' };
-    const ping = latency || 18;
-    if (ping < 50) return { label: 'Excellent', color: '#22C55E', bars: 5, text: 'Ultra-low latency connection' };
-    if (ping < 150) return { label: 'Good', color: '#10B981', bars: 4, text: 'Stable connection for standard audits' };
-    if (ping < 300) return { label: 'Fair', color: '#F59E0B', bars: 3, text: 'Minor communication delay detected' };
-    return { label: 'Poor', color: '#EF4444', bars: 1, text: 'High network latency' };
-  };
-
-  const status = getSignalStrength();
-
-  return (
-    <div style={cardStyle}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Wifi size={18} color="var(--accent)" />
-          <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Network Strength & Diagnostics
-          </h2>
-        </div>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: status.color, background: `${status.color}15`, padding: '4px 10px', borderRadius: '12px' }}>
-          {status.label}
-        </span>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', background: 'var(--surface-muted)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '16px' }}>
-        {/* Signal Bars Visual */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '24px', width: '30px' }}>
-          {[1, 2, 3, 4, 5].map((bar) => {
-            const active = bar <= status.bars;
-            return (
-              <div
-                key={bar}
-                style={{
-                  width: '4px',
-                  height: `${bar * 20}%`,
-                  background: active ? status.color : 'var(--border)',
-                  borderRadius: '2px',
-                  transition: 'background-color 0.3s ease'
-                }}
-              />
-            );
-          })}
-        </div>
-
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)' }}>
-            {latency != null ? `${latency} ms Latency` : '18 ms (Direct API)'}
-          </div>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            {status.text}
-          </div>
-        </div>
-
-        <button
-          onClick={checkStatus}
-          disabled={checking}
-          style={{
-            background: 'var(--accent-soft)',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '8px 14px',
-            color: 'var(--accent)',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: checking ? 'wait' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'all 0.2s'
-          }}
-        >
-          <RefreshCw size={13} style={{ animation: checking ? 'spin 1s linear infinite' : 'none' }} />
-          Test Speed
-        </button>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        <div style={{ background: 'var(--surface-muted)', padding: '10px 12px', borderRadius: '10px', fontSize: '11.5px' }}>
-          <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Connection Protocol:</span>
-          <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>HTTPS / WSS Secure (TLS 1.3)</div>
-        </div>
-        <div style={{ background: 'var(--surface-muted)', padding: '10px 12px', borderRadius: '10px', fontSize: '11.5px' }}>
-          <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Packet Loss Rate:</span>
-          <div style={{ fontWeight: 700, color: 'var(--success)', marginTop: '2px' }}>0.00% (Stable Pipeline)</div>
-        </div>
-      </div>
-    </div>
-  );
-}

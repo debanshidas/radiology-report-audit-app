@@ -5,11 +5,7 @@ Run: python test_scoring.py
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from utils.analyzer import (
-    _detect_sections, _score_completeness, _score_clinical_alignment,
-    _detect_terminology_issues, _score_terminology, _score_formatting,
-    _score_impression_quality, _calculate_weighted_score, _derive_readiness
-)
+from utils.analyzer import audit_report
 
 MANDATORY = [
     "Patient Demographics",
@@ -84,34 +80,15 @@ for name, text in REPORTS.items():
     print(f"REPORT: {name}")
     print(f"{'-'*65}")
 
-    sections = _detect_sections(text, MANDATORY)
-    completeness, cdeds = _score_completeness(sections)
-    alignment, adata = _score_clinical_alignment(text)
-    has_contradiction = alignment < 50
-    term_issues = _detect_terminology_issues(text)
-    terminology = _score_terminology(term_issues)
-    formatting, fdeds = _score_formatting(text, sections)
-    impression, inotes = _score_impression_quality(text)
-    final = _calculate_weighted_score(completeness, terminology, alignment, formatting, impression)
-    readiness = _derive_readiness(final, sections, has_contradiction)
+    res = audit_report(api_key="", report_text=text, modality="Chest X-Ray", mandatory_sections=MANDATORY)
+    final = res["quality_score"]
+    readiness = res["readiness_status"]
 
-    print(f"  Completeness:       {completeness:3d}/100  {cdeds}")
-    print(f"  Medical Terminology:{terminology:3d}/100  ({len(term_issues)} issues found)")
-    print(f"  Clinical Alignment: {alignment:3d}/100  {adata[:80]}")
-    print(f"  Formatting:         {formatting:3d}/100  {fdeds}")
-    print(f"  Impression Quality: {impression:3d}/100  {inotes[:1]}")
-    print(f"  ----------------------------------")
     print(f"  FINAL SCORE:        {final:3d}/100")
     print(f"  READINESS:          {readiness}")
-
-    if term_issues:
-        print(f"  Terminology issues:")
-        for t in term_issues:
-            print(f"    • {t['quoted']}: {t['description'][:60]}")
-
-    missing = [s['name'] for s in sections if not s['present']]
-    if missing:
-        print(f"  Missing sections: {missing}")
+    print(f"  Deductions log:")
+    for d in res["deductions_log"]:
+        print(f"    • {d['section']} ({d['points']} pts): {d['reason']}")
 
 print("\n" + "=" * 65)
 print("Expected Results:")

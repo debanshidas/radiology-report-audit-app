@@ -12,13 +12,11 @@ export default function DemoLibraryModal({ isOpen, onClose, onSelectReport, onSe
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedQuality, setSelectedQuality] = useState('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
-  const [selectedScoreRange, setSelectedScoreRange] = useState('All');
   const [previewReport, setPreviewReport] = useState(null);
 
   const categories = ['All', 'X-Ray', 'CT', 'MRI', 'Ultrasound', 'Mammography', 'Angiography / Doppler'];
   const qualityTiers = ['All', 'Excellent', 'Good', 'Average', 'Poor', 'Critical'];
   const difficulties = ['All', 'Easy', 'Moderate', 'Complex'];
-  const scoreRanges = ['All', '90-100', '75-89', '50-74', '<50'];
 
   const filteredReports = useMemo(() => {
     return DEMO_REPORTS.filter((rep) => {
@@ -35,15 +33,9 @@ export default function DemoLibraryModal({ isOpen, onClose, onSelectReport, onSe
       const matchQual = selectedQuality === 'All' || rep.qualityLevel === selectedQuality;
       const matchDiff = selectedDifficulty === 'All' || rep.difficulty === selectedDifficulty;
 
-      let matchScore = true;
-      if (selectedScoreRange === '90-100') matchScore = rep.expectedScore >= 90;
-      else if (selectedScoreRange === '75-89') matchScore = rep.expectedScore >= 75 && rep.expectedScore <= 89;
-      else if (selectedScoreRange === '50-74') matchScore = rep.expectedScore >= 50 && rep.expectedScore <= 74;
-      else if (selectedScoreRange === '<50') matchScore = rep.expectedScore < 50;
-
-      return matchSearch && matchCat && matchQual && matchDiff && matchScore;
+      return matchSearch && matchCat && matchQual && matchDiff;
     });
-  }, [searchQuery, selectedCategory, selectedQuality, selectedDifficulty, selectedScoreRange]);
+  }, [searchQuery, selectedCategory, selectedQuality, selectedDifficulty]);
 
   if (!isOpen) return null;
 
@@ -196,26 +188,6 @@ export default function DemoLibraryModal({ isOpen, onClose, onSelectReport, onSe
                 ))}
               </div>
             </div>
-
-            {/* Score Range Filter */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '10px' }}>Score Range:</span>
-              <div style={{ display: 'flex', gap: '4px' }}>
-                {scoreRanges.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSelectedScoreRange(s)}
-                    style={{
-                      padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, border: 'none', cursor: 'pointer',
-                      background: selectedScoreRange === s ? '#0D9488' : 'var(--surface-muted)',
-                      color: selectedScoreRange === s ? '#FFF' : 'var(--text-secondary)'
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -245,7 +217,7 @@ export default function DemoLibraryModal({ isOpen, onClose, onSelectReport, onSe
                         {rep.modality}
                       </span>
                       <span style={{ fontSize: '11px', fontWeight: 800, padding: '3px 9px', borderRadius: '4px', background: qBadge.bg, color: qBadge.text, border: `1px solid ${qBadge.border}` }}>
-                        Expected Score: {rep.expectedScore}/100 ({rep.qualityLevel})
+                        {rep.qualityLevel}
                       </span>
                     </div>
 
@@ -322,7 +294,7 @@ export default function DemoLibraryModal({ isOpen, onClose, onSelectReport, onSe
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>{previewReport.title}</h3>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', display: 'inline-block' }}>
-                  Modality: <strong>{previewReport.modality}</strong> | Expected Human QA Baseline: <strong>{previewReport.expectedScore}/100</strong> ({previewReport.qualityLevel})
+                  Modality: <strong>{previewReport.modality}</strong> | Quality Tier: <strong>{previewReport.qualityLevel}</strong>
                 </span>
               </div>
               <button onClick={() => setPreviewReport(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>

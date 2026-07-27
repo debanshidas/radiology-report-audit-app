@@ -21,6 +21,16 @@ import AboutPage from './pages/AboutPage';
 import { apiFetch } from './utils/apiClient';
 import { directGroqAudit } from './utils/directGroqAudit';
 
+export function getSimplifiedModality(mod) {
+  if (!mod) return 'X-ray';
+  const m = mod.toLowerCase();
+  if (m.includes('x-ray') || m.includes('xray') || m.includes('radiograph') || m.includes('cxr')) return 'X-ray';
+  if (m.includes('ct') || m.includes('mri') || m.includes('mr ') || m === 'mri' || m.includes('dexa') || m.includes('pet')) return 'CT';
+  if (m.includes('mammogram') || m.includes('mammography') || m.includes('breast')) return 'Mammography';
+  if (m.includes('ultrasound') || m.includes('sonogram') || m.includes('us') || m.includes('doppler') || m.includes('echo')) return 'Ultrasound';
+  return 'X-ray';
+}
+
 export default function App() {
   const [currentView, setCurrentView] = useState('landing');
   const [activePage, setActivePage] = useState('dashboard');
@@ -29,7 +39,7 @@ export default function App() {
   const [provider, setProvider] = useState(() => localStorage.getItem('provider') || 'groq');
 
   const [reportText, setReportText] = useState('');
-  const [modality, setModality] = useState('Chest X-Ray');
+  const [modality, setModality] = useState('X-ray');
   const [mandatorySections, setMandatorySections] = useState([
     'Patient Demographics', 'Clinical Indication / History',
     'Procedure Details / Contrast Agent Details', 'Comparison Study',
@@ -52,6 +62,28 @@ export default function App() {
       return [];
     }
   });
+
+  const [queuedReports, setQueuedReports] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rad_queued_reports');
+      if (saved) {
+        return JSON.parse(saved).map(item => ({
+          ...item,
+          timestamp: item.timestamp ? new Date(item.timestamp) : new Date()
+        }));
+      }
+    } catch (e) {}
+    return [
+      { id: 'PID-89412', modality: 'Chest X-Ray', status: 'Queued', timestamp: new Date(Date.now() - 2 * 60 * 1000), priority: 'High' },
+      { id: 'PID-74129', modality: 'CT Abdomen', status: 'Queued', timestamp: new Date(Date.now() - 8 * 60 * 1000), priority: 'Routine' },
+      { id: 'PID-90214', modality: 'Mammography', status: 'Queued', timestamp: new Date(Date.now() - 15 * 60 * 1000), priority: 'Urgent' },
+      { id: null, modality: 'Ultrasound', status: 'Queued', timestamp: new Date(Date.now() - 22 * 60 * 1000), priority: null },
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('rad_queued_reports', JSON.stringify(queuedReports));
+  }, [queuedReports]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -96,6 +128,20 @@ export default function App() {
     setCurrentStep(1);
     setTimeout(() => setCurrentStep(2), 600);
     setTimeout(() => setCurrentStep(3), 1200);
+
+    // Prepend to queued reports
+    const mrnMatch = reportText.match(/(?:MRN|Patient\s*ID):\s*([a-zA-Z0-9_-]+)/i);
+    const reportId = mrnMatch ? mrnMatch[1].trim() : null;
+    const isUrgent = /acute|pain|emergency|urgent|severe/i.test(reportText);
+
+    const newQueueItem = {
+      id: reportId,
+      modality: getSimplifiedModality(modality),
+      status: 'Queued',
+      timestamp: new Date(),
+      priority: isUrgent ? 'High' : 'Routine'
+    };
+    setQueuedReports(prev => [newQueueItem, ...prev]);
 
     let data;
     let isSuccess = false;
@@ -149,13 +195,13 @@ export default function App() {
 
         data.original_report_text = reportText;
         setAuditResult(data);
-        if (data.effective_modality) setModality(data.effective_modality);
+        if (data.effective_modality) setModality(getSimplifiedModality(data.effective_modality));
 
         const newItem = {
           id: 'audit_' + Date.now(),
           timestamp: new Date().toISOString(),
           report_title: reportText.substring(0, 45).split('\n')[0] || 'Radiology Report',
-          modality: data.effective_modality || modality || 'Chest X-Ray',
+          modality: getSimplifiedModality(data.effective_modality || modality || 'X-ray'),
           quality_score: data.quality_score,
           readiness_status: data.readiness_status,
           audit_result: data
@@ -236,7 +282,7 @@ export default function App() {
               style={{ flex: 1, minHeight: 0, padding: '24px', overflowY: 'auto', overflowX: 'hidden', position: 'relative', WebkitOverflowScrolling: 'touch' }}
             >
               <div>
-                {activePage === 'dashboard' && <DashboardPage setActivePage={setActivePage} setReportText={setReportText} serverConnected={serverConnected} onBackToWelcome={() => setCurrentView('landing')} />}
+                {activePage === 'dashboard' && <DashboardPage setActivePage={setActivePage} setReportText={setReportText} serverConnected={serverConnected} onBackToWelcome={() => setCurrentView('landing')} queuedReports={queuedReports} />}
                 {activePage === 'upload' && <UploadPage reportText={reportText} setReportText={setReportText} modality={modality} setModality={setModality} mandatorySections={mandatorySections} setMandatorySections={setMandatorySections} onStartAudit={handleStartAudit} isLoading={isAnalyzing} onBackToWelcome={() => setCurrentView('landing')} />}
                 {activePage === 'analysis' && <AnalysisPage isAnalyzing={isAnalyzing} currentStep={currentStep} auditResult={auditResult} analysisError={analysisError} setActivePage={setActivePage} provider={provider} />}
                 {activePage === 'quality' && <QualityDashboardPage auditResult={auditResult} reportText={activeReportText} setReportText={setReportText} setActivePage={setActivePage} />}
