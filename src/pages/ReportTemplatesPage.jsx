@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Download, FileText, CheckCircle2, BookOpen, Sparkles, FileCode } from 'lucide-react';
+import { Download, FileText, CheckCircle2, BookOpen, Sparkles, FileCode, Eye } from 'lucide-react';
 import AICautionNotice from '../components/AICautionNotice';
+import TemplatePreviewModal from '../components/TemplatePreviewModal';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { downloadPdfBlob, downloadDocxBlob } from '../utils/downloadHelper';
@@ -18,7 +19,7 @@ const TEMPLATES = [
     name: 'Brain MRI (Routine Neuro protocol)',
     modality: 'Brain MRI',
     desc: 'Multi-sequence MRI template evaluating parenchymal signal intensity, ventricular system, extra-axial spaces, and diffusion weighted imaging.',
-    sections: ['Demographics', 'Indication', 'Pulse Sequences & Contrast', 'Comparison', 'Brain Parenchyma', 'Ventacles & Vessels', 'Impression'],
+    sections: ['Demographics', 'Indication', 'Pulse Sequences & Contrast', 'Comparison', 'Brain Parenchyma', 'Ventricles & Vessels', 'Impression'],
   },
   {
     id: 'abdomen_ct',
@@ -101,8 +102,9 @@ Board Certified Radiologist
 Date Signed: [MM/DD/YYYY]`;
 };
 
-export default function ReportTemplatesPage() {
+export default function ReportTemplatesPage({ setReportText, setModality, setActivePage }) {
   const [downloadingKey, setDownloadingKey] = useState(null);
+  const [previewTemplate, setPreviewTemplate] = useState(null);
 
   const handleDownload = async (template, format) => {
     const key = `${template.id}_${format}`;
@@ -132,7 +134,7 @@ export default function ReportTemplatesPage() {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
         doc.setTextColor(255, 255, 255);
-        doc.text('ACR COMPLIANT', 196, 16, { align: 'right' });
+        doc.text('ACR REFERENCE', 196, 16, { align: 'right' });
 
         // Body Text Table Container
         autoTable(doc, {
@@ -172,6 +174,12 @@ export default function ReportTemplatesPage() {
     }
   };
 
+  const handleUseTemplateInWorkspace = (template, rawText) => {
+    if (setReportText) setReportText(rawText);
+    if (setModality) setModality(template.modality);
+    if (setActivePage) setActivePage('upload');
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
@@ -181,7 +189,7 @@ export default function ReportTemplatesPage() {
           ACR Standardized Report Template Library
         </h1>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '3px 0 0' }}>
-          Download ACR & RadLex compliant radiology reporting templates directly in PDF, DOCX, or TXT format
+          Preview and inspect structured reporting templates or download in PDF and text formats
         </p>
       </div>
 
@@ -196,8 +204,8 @@ export default function ReportTemplatesPage() {
                 <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: 'var(--surface-muted)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
                   {t.modality}
                 </span>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#16A34A', background: '#DCFCE7', padding: '1px 6px', borderRadius: '4px' }}>
-                  ACR Compliant
+                <span style={{ fontSize: '10px', fontWeight: 700, color: '#0284C7', background: 'rgba(2, 132, 199, 0.1)', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(2, 132, 199, 0.2)' }}>
+                  ACR Reference
                 </span>
               </div>
 
@@ -223,19 +231,20 @@ export default function ReportTemplatesPage() {
               </div>
             </div>
 
-            {/* Actions */}
+            {/* Actions: Replaced Docs with Preview Template */}
             <div style={{ display: 'flex', gap: '8px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
               <button
-                onClick={() => handleDownload(t, 'docx')}
-                disabled={downloadingKey === `${t.id}_docx`}
-                className="btn-primary" style={{ flex: 1, fontSize: '11px', padding: '6px 10px' }}
+                onClick={() => setPreviewTemplate(t)}
+                className="btn-primary"
+                style={{ flex: 1, fontSize: '11px', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
               >
-                <Download size={12} /> DOCX
+                <Eye size={13} /> Preview Template
               </button>
               <button
                 onClick={() => handleDownload(t, 'pdf')}
                 disabled={downloadingKey === `${t.id}_pdf`}
-                className="btn-secondary" style={{ flex: 1, fontSize: '11px', padding: '6px 10px' }}
+                className="btn-secondary"
+                style={{ flex: 1, fontSize: '11px', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
               >
                 <Download size={12} /> PDF
               </button>
@@ -243,6 +252,15 @@ export default function ReportTemplatesPage() {
           </div>
         ))}
       </div>
+
+      {/* Modal Render */}
+      {previewTemplate && (
+        <TemplatePreviewModal
+          template={previewTemplate}
+          onClose={() => setPreviewTemplate(null)}
+          onUseTemplate={setReportText || setModality || setActivePage ? handleUseTemplateInWorkspace : null}
+        />
+      )}
 
     </div>
   );

@@ -1,6 +1,7 @@
-import React from 'react';
-import { Cpu, ArrowRight, CheckCircle2, Clock, Loader2, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Cpu, ArrowRight, CheckCircle2, Clock, Loader2, AlertCircle, Download } from 'lucide-react';
 import AICautionNotice from '../components/AICautionNotice';
+import { generateClientPdf } from '../utils/pdfGenerator';
 
 const PIPELINE_STAGES = [
   { id: 1, title: 'Upload & Validation', desc: 'File payload received and validated against HIS standards.' },
@@ -12,11 +13,30 @@ const PIPELINE_STAGES = [
 ];
 
 export default function AnalysisPage({ isAnalyzing, currentStep, auditResult, analysisError, setActivePage, provider }) {
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (!auditResult) return;
+    setIsDownloadingPdf(true);
+    try {
+      await generateClientPdf({
+        audit_result: auditResult,
+        modality: auditResult.effective_modality || 'Chest X-Ray',
+        report_text: auditResult.original_report_text || auditResult.report_text || '',
+        filename: `detailed_radiology_audit_${(auditResult.effective_modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`
+      });
+    } catch (err) {
+      alert('PDF Export Error: ' + err.message);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Page Title */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
             Clinical QA Analysis Pipeline
@@ -26,9 +46,20 @@ export default function AnalysisPage({ isAnalyzing, currentStep, auditResult, an
           </p>
         </div>
         {auditResult && !isAnalyzing && (
-          <button onClick={() => setActivePage('quality')} className="btn-primary">
-            View Quality Dashboard <ArrowRight size={14} />
-          </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              onClick={handleDownloadPdf}
+              disabled={isDownloadingPdf}
+              className="btn-secondary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 700 }}
+            >
+              <Download size={14} />
+              {isDownloadingPdf ? 'Exporting PDF...' : 'Download Detailed Audit Report (PDF)'}
+            </button>
+            <button onClick={() => setActivePage('quality')} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 800 }}>
+              View Quality Dashboard <ArrowRight size={14} />
+            </button>
+          </div>
         )}
       </div>
 

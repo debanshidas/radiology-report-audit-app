@@ -3,6 +3,7 @@ import { BarChart3, CheckCircle2, XCircle, AlertTriangle, Lightbulb, ChevronDown
 import AICautionNotice from '../components/AICautionNotice';
 import VersionHistoryDrawer from '../components/VersionHistoryDrawer';
 import { calculateDimensionScores } from '../utils/directGroqAudit';
+import { generateClientPdf } from '../utils/pdfGenerator';
 
 function getScoreGrade(score) {
   if (score >= 95) return { grade: 'Excellent', status: 'Hospital Ready', bg: '#E8F5E9', text: '#15803D', border: '#86EFAC' };
@@ -84,11 +85,29 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
     ver.status = 'Approved';
   };
 
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setIsDownloadingPdf(true);
+    try {
+      await generateClientPdf({
+        audit_result: res,
+        modality: res.effective_modality || 'Chest X-Ray',
+        report_text: effectiveOriginalText,
+        filename: `detailed_radiology_audit_${(res.effective_modality || 'report').replace(/\s+/g, '_')}_${Date.now()}.pdf`
+      });
+    } catch (err) {
+      alert('PDF Export Error: ' + err.message);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Page Title & Navigation Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #DDE7F0', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #DDE7F0', paddingBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#2C4964', margin: 0, letterSpacing: '-0.3px' }}>
             Report Quality Score Breakdown — {res.audit_id || 'RAD-QA-2026'}
@@ -97,9 +116,25 @@ export default function QualityDashboardPage({ auditResult, reportText, setRepor
             Senior QA Evaluation • Mode: 11-Dimension Mathematical Gating Engine
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button onClick={() => setShowScoringGuide(!showScoringGuide)} className="btn-medicare-teal">
             <HelpCircle size={14} /> {showScoringGuide ? 'Hide Scoring Rules' : 'How Marks Are Assigned'}
+          </button>
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
+            className="btn-primary"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              fontSize: '12.5px',
+              fontWeight: 800
+            }}
+          >
+            <Download size={14} />
+            {isDownloadingPdf ? 'Exporting PDF...' : 'Download Detailed Audit Report (PDF)'}
           </button>
         </div>
       </div>

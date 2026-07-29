@@ -80,15 +80,34 @@ export default function AuditReportPage({ auditResult, modality }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '840px', margin: '0 auto' }}>
 
       {/* Page Title */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
-            Clinical QA Audit Certificate
+            Clinical QA Audit Certificate & Detailed Report
           </h1>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-            Departmental quality record for HIS compliance logs
+            Departmental quality record and 11-dimension breakdown for HIS compliance logs
           </p>
         </div>
+
+        <button
+          onClick={handleDownload}
+          disabled={isDownloading}
+          className="btn-primary"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            fontSize: '13px',
+            fontWeight: 800,
+            boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
+            cursor: 'pointer'
+          }}
+        >
+          <Download size={16} />
+          {isDownloading ? 'Generating PDF...' : 'Download Detailed Audit Report (PDF)'}
+        </button>
       </div>
 
       <AICautionNotice />

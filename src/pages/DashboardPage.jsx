@@ -1,6 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, Upload, History, FileCode, BarChart3, TrendingUp, ShieldCheck, ArrowRight, FileText, CheckCircle2, AlertTriangle, Clock, ArrowLeft, Wifi } from 'lucide-react';
 import { QualityTrendChart, ModalityDistributionChart } from '../components/AnalyticsCharts';
+import PrivacyStandardsCard from '../components/PrivacyStandardsCard';
 
 export default function DashboardPage({ setActivePage, setReportText, setModality, onBackToWelcome, serverConnected, queuedReports }) {
   const handleLaunchSample = (mod, sampleText) => {
@@ -241,6 +242,9 @@ export default function DashboardPage({ setActivePage, setReportText, setModalit
         </div>
 
       </div>
+
+      {/* Privacy & Standards Information Card */}
+      <PrivacyStandardsCard defaultExpanded={true} />
 
     </div>
   );

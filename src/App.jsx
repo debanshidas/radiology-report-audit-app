@@ -295,8 +295,8 @@ export default function App() {
                 {activePage === 'report' && <AuditReportPage auditResult={auditResult} reportText={activeReportText} modality={modality} />}
                 {activePage === 'viewer' && <ReportViewer reportText={activeReportText} auditResult={auditResult} />}
                 {activePage === 'history' && <AnalysisHistoryPage historyItems={historyItems} setHistoryItems={setHistoryItems} onSelectAudit={handleSelectAudit} setActivePage={setActivePage} />}
-                {activePage === 'templates' && <ReportTemplatesPage />}
-                {activePage === 'downloads' && <ReportTemplatesPage />}
+                {activePage === 'templates' && <ReportTemplatesPage setReportText={setReportText} setModality={setModality} setActivePage={setActivePage} />}
+                {activePage === 'downloads' && <ReportTemplatesPage setReportText={setReportText} setModality={setModality} setActivePage={setActivePage} />}
                 {activePage === 'analytics' && <AnalyticsPage />}
                 {activePage === 'admin' && <AdminPage />}
                 {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} serverConnected={serverConnected} setServerConnected={setServerConnected} provider={provider} setProvider={setProvider} />}
