@@ -1,5 +1,4 @@
 import React from 'react';
-import { ShieldCheck, FileText, Lock, Mail, ExternalLink } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -18,10 +17,6 @@ export default function Footer() {
         </span>
         <span>•</span>
         <span>Last System Sync: July 2026</span>
-        <span>•</span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#16A34A', fontWeight: 600 }}>
-          <ShieldCheck size={12} /> HIPAA & ACR Compliant
-        </span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>

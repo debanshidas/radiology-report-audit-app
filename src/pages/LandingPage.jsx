@@ -529,7 +529,7 @@ export default function LandingPage({ onLaunchApp, theme, setTheme }) {
         color: colors.textSecondary, position: 'relative', zIndex: 2,
         transition: 'background 0.3s, border 0.3s'
       }}>
-        © 2026 Radiology Report Audit System (RadAudit). HIPAA Compliant In-Browser Execution.
+        © 2026 Radiology Report Audit System (RadAudit). In-Browser Execution.
       </div>
 
     </div>
